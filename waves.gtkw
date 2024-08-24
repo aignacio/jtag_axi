@@ -1,0 +1,29 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Sat Aug 24 12:07:14 2024
+[*]
+[dumpfile] "./run_dir/test_jtag_fsm_verilator/dump.fst"
+[dumpfile_mtime] "Sat Aug 24 12:05:40 2024"
+[dumpfile_size] 842
+[savefile] "/Users/aignacio/projects/jtag_axi/waves.gtkw"
+[timestart] 0
+[size] 1592 1087
+[pos] 2783 505
+*-10.996398 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[treeopen] .
+[sst_width] 253
+[signals_width] 144
+[sst_expanded] 1
+[sst_vpaned_height] 329
+@28
+tap_ctrl_fsm.trstn
+@29
+tap_ctrl_fsm.tck
+@28
+tap_ctrl_fsm.tdi
+tap_ctrl_fsm.tdo
+tap_ctrl_fsm.tms
+@100000028
+tap_ctrl_fsm.tap_state[3:0]
+[pattern_trace] 1
+[pattern_trace] 0
