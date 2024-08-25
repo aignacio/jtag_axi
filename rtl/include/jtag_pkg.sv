@@ -4,22 +4,22 @@
 package jtag_pkg;
 
   typedef enum logic [3:0] {
-    TEST_LOGIC_RESET,
-    RUN_TEST_IDLE,
-    SELECT_DR_SCAN,
-    CAPTURE_DR,
-    SHIFT_DR,
-    EXIT1_DR,
-    PAUSE_DR,
-    EXIT2_DR,
-    UPDATE_DR,
-    SELECT_IR_SCAN,
-    CAPTURE_IR,
-    SHIFT_IR,
-    EXIT1_IR,
-    PAUSE_IR,
-    EXIT2_IR,
-    UPDATE_IR
+    TEST_LOGIC_RESET  = 'd0,
+    RUN_TEST_IDLE     = 'd1,
+    SELECT_DR_SCAN    = 'd2,
+    CAPTURE_DR        = 'd3,
+    SHIFT_DR          = 'd4,
+    EXIT1_DR          = 'd5,
+    PAUSE_DR          = 'd6,
+    EXIT2_DR          = 'd7,
+    UPDATE_DR         = 'd8,
+    SELECT_IR_SCAN    = 'd9,
+    CAPTURE_IR        = 'd10,
+    SHIFT_IR          = 'd11,
+    EXIT1_IR          = 'd12,
+    PAUSE_IR          = 'd13,
+    EXIT2_IR          = 'd14,
+    UPDATE_IR         = 'd15
   } tap_ctrl_fsm_t;
  
   //typedef struct package {
