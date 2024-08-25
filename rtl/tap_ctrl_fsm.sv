@@ -129,7 +129,7 @@ module tap_ctrl_fsm
         end
       end
       UPDATE_IR: begin
-        if (tms == 1'b0) begin
+        if (tms == 1'b1) begin
           next_fsm = SELECT_DR_SCAN;
         end
         else begin
