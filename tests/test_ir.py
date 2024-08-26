@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# File              : test_jtag_fsm.py
+# File              : test_ir.py
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
@@ -14,7 +14,7 @@ import random
 from pathlib import Path
 from random import randrange
 from const.const import cfg
-from const.jtag import JTAGFSM, JTAGState
+from const.jtag import JTAGFSM, JTAGState, jtag_transitions
 from cocotb.triggers import ClockCycles, Timer
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
@@ -40,38 +40,38 @@ async def update_tck(dut):
     await Timer(1, units="ns")
 
 
-def pick_random_value(input_list):
-    if input_list:
-        return random.choice(input_list)
-    else:
-        return None  # Return None if the list is empty
+async def move_to_jtag_state(dut, state):
+    """
+    Moves the DUT JTAG TAP controller to the specified state.
 
+    :param dut: The device under test (DUT)
+    :param state: The target JTAG state (of type JTAGState)
+    """
+    tck = dut.tck  # JTAG clock
+    tms = dut.tms  # JTAG mode select
+    tdi = dut.tdi  # JTAG data in (if needed)
 
-def get_tms():
-    while True:
-        yield pick_random_value([0, 1])
+    transitions = jtag_transitions[state]
+
+    for tms_value in transitions:
+        dut.tms.value = tms_value
+        await update_tck(dut)
 
 
 @cocotb.test()
 async def run_test(dut):
     await reset_fsm(dut)
-    n = 2000
 
     jtag_fsm = JTAGFSM()
 
-    for i in range(n):
-        tms = next(get_tms())
-        dut.tms.value = tms
-        jtag_fsm.transition(tms)
-        await update_tck(dut)
-        assert JTAGState(dut.fsm_ff.value) == jtag_fsm.fsm, "JTAG FSM diverges"
+    await move_to_jtag_state(dut, JTAGState.SHIFT_IR)
 
 
 def test_jtag_fsm():
     """
-    Check JTAG FSM transitions
+    Check all available instruction through the IR
 
-    Test ID: 1
+    Test ID: 2
     """
 
     test_name = os.path.splitext(os.path.basename(__file__))[0]
@@ -84,7 +84,7 @@ def test_jtag_fsm():
     runner.build(
         includes=cfg.INC_DIR,
         verilog_sources=cfg.VERILOG_SOURCES,
-        hdl_toplevel="tap_ctrl_fsm",
+        hdl_toplevel="jtag_wrapper",
         build_args=cfg.EXTRA_ARGS,
         clean=True,
         timescale=cfg.TIMESCALE,
@@ -93,7 +93,7 @@ def test_jtag_fsm():
     )
 
     runner.test(
-        hdl_toplevel="tap_ctrl_fsm", test_module=test_name, plusargs=cfg.PLUS_ARGS
+        hdl_toplevel="jtag_wrapper", test_module=test_name, plusargs=cfg.PLUS_ARGS
     )
 
 

@@ -11,18 +11,12 @@ module tap_ctrl_fsm
   input                 trstn,
   input                 tck,
   input                 tms,
-  input                 tdi,
-  output logic          tdo,
   output tap_ctrl_fsm_t tap_state
 );
   tap_ctrl_fsm_t fsm_ff, next_fsm;
 
-  always_comb  begin
-    tap_state = fsm_ff;
-    tdo = 1'b0;
-  end
-
   always_comb begin
+    tap_state = fsm_ff;
     next_fsm = fsm_ff;
 
     unique case (fsm_ff)

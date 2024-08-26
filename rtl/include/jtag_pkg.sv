@@ -21,7 +21,18 @@ package jtag_pkg;
     EXIT2_IR          = 'd14,
     UPDATE_IR         = 'd15
   } tap_ctrl_fsm_t;
- 
+
+  typedef enum logic [3:0] {
+    BYPASS            = 'b1111,
+    EXTEST            = 'b0000,
+    IDCODE            = 'b1110,
+    SAMPLE_PRELOAD    = 'b1010,
+    IC_RESET          = 'b1100,
+    DEFAULT_FAULT_ISO = 'b0010
+  } ir_decoding_t;
+
+  localparam MSB_IR_ENC = $bits(ir_decoding_t)-1;
+
   //typedef struct package {
   //  logic tck;
   //  logic tms;
