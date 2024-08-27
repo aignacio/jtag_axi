@@ -28,7 +28,7 @@ package jtag_pkg;
     IDCODE            = 'b1110,
     SAMPLE_PRELOAD    = 'b1010,
     IC_RESET          = 'b1100,
-    DEFAULT_FAULT_ISO = 'b0010
+    DEFAULT_FAULT_ISO = 'b0001
   } ir_decoding_t;
 
   localparam MSB_IR_ENC = $bits(ir_decoding_t)-1;

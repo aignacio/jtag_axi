@@ -2,7 +2,7 @@ from enum import Enum
 
 
 # Instruction Register Encoding
-class IREnc(Enum):
+class InstJTAG(Enum):
     BYPASS = "0b1111"
     EXTEST = "0b0000"
     IDCODE = "0b1110"
@@ -116,22 +116,21 @@ class JTAGFSM:
 
 
 # JTAG State Transitions
-jtag_transitions = {
+jtag_trans = {
     JTAGState.TEST_LOGIC_RESET: [1, 1, 1, 1, 1],  # From any state
-    JTAGState.RUN_TEST_IDLE: [0],  # From TEST_LOGIC_RESET
-    # or other states
-    JTAGState.SELECT_DR_SCAN: [1],  # From RUN_TEST_IDLE
-    JTAGState.CAPTURE_DR: [0],  # From SELECT_DR_SCAN
-    JTAGState.SHIFT_DR: [0],  # From CAPTURE_DR
-    JTAGState.EXIT1_DR: [1],  # From SHIFT_DR
-    JTAGState.PAUSE_DR: [0],  # From EXIT1_DR
-    JTAGState.EXIT2_DR: [1],  # From PAUSE_DR
-    JTAGState.UPDATE_DR: [1],  # From EXIT2_DR or SHIFT_DR
-    JTAGState.SELECT_IR_SCAN: [1, 1],  # From SELECT_DR_SCAN
-    JTAGState.CAPTURE_IR: [0],  # From SELECT_IR_SCAN
-    JTAGState.SHIFT_IR: [0],  # From CAPTURE_IR
-    JTAGState.EXIT1_IR: [1],  # From SHIFT_IR
-    JTAGState.PAUSE_IR: [0],  # From EXIT1_IR
-    JTAGState.EXIT2_IR: [1],  # From PAUSE_IR
-    JTAGState.UPDATE_IR: [1],  # From EXIT2_IR or SHIFT_IR
+    JTAGState.RUN_TEST_IDLE: [0],  # From TEST_LOGIC_RESET  or other states
+    JTAGState.SELECT_DR_SCAN: [0, 1],  # From RUN_TEST_IDLE
+    JTAGState.CAPTURE_DR: [0, 1, 0],  # From SELECT_DR_SCAN
+    JTAGState.SHIFT_DR: [0, 1, 0, 0],  # From CAPTURE_DR
+    JTAGState.EXIT1_DR: [0, 1, 0, 1],  # From SHIFT_DR
+    JTAGState.PAUSE_DR: [0, 1, 0, 1, 0],  # From EXIT1_DR
+    JTAGState.EXIT2_DR: [0, 1, 0, 1, 0, 1],  # From PAUSE_DR
+    JTAGState.UPDATE_DR: [0, 1, 0, 0, 1, 0, 1, 1],  # From EXIT2_DR or SHIFT_DR
+    JTAGState.SELECT_IR_SCAN: [0, 1, 1, 0],  # From SELECT_DR_SCAN
+    JTAGState.CAPTURE_IR: [0, 1, 1, 0],  # From SELECT_IR_SCAN
+    JTAGState.SHIFT_IR: [0, 1, 1, 0, 0],  # From CAPTURE_IR
+    JTAGState.EXIT1_IR: [0, 1, 1, 0, 1],  # From SHIFT_IR
+    JTAGState.PAUSE_IR: [0, 1, 1, 0, 1, 0],  # From EXIT1_IR
+    JTAGState.EXIT2_IR: [0, 1, 1, 0, 1, 0, 1],  # From PAUSE_IR
+    JTAGState.UPDATE_IR: [0, 1, 1, 0, 1, 1],  # From EXIT2_IR or SHIFT_IR
 }

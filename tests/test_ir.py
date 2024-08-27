@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 26.08.2024
+# Last Modified Date: 27.08.2024
 import cocotb
 import os
 import logging
@@ -14,7 +14,7 @@ import random
 from pathlib import Path
 from random import randrange
 from const.const import cfg
-from const.jtag import JTAGFSM, JTAGState, jtag_transitions
+from const.jtag import JTAGFSM, JTAGState, jtag_trans, InstJTAG
 from cocotb.triggers import ClockCycles, Timer
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
@@ -27,6 +27,7 @@ async def reset_fsm(dut):
     dut._log.info(f"Resetting JTAG FSM")
     dut.trstn.value = 0
     dut.tms.value = 0
+    dut.tdi.value = 0
     dut.tck.value = 0
     await Timer(10, units="ns")
     dut.trstn.value = 1
@@ -41,30 +42,47 @@ async def update_tck(dut):
 
 
 async def move_to_jtag_state(dut, state):
-    """
-    Moves the DUT JTAG TAP controller to the specified state.
+    tms = dut.tms
 
-    :param dut: The device under test (DUT)
-    :param state: The target JTAG state (of type JTAGState)
-    """
-    tck = dut.tck  # JTAG clock
-    tms = dut.tms  # JTAG mode select
-    tdi = dut.tdi  # JTAG data in (if needed)
+    transitions = jtag_trans[state]
 
-    transitions = jtag_transitions[state]
+    await reset_fsm(dut)
 
     for tms_value in transitions:
         dut.tms.value = tms_value
         await update_tck(dut)
 
 
+async def select_instruction(dut, instr):
+    await move_to_jtag_state(dut, JTAGState.SHIFT_IR)
+
+    for idx, tdi_val in enumerate(instr.value[2:][::-1]):
+        dut.tdi.value = int(tdi_val)
+        if idx == len(instr.value[2:]) - 1:
+            break
+        await update_tck(dut)
+
+    dut.tms.value = 1
+    await update_tck(dut)
+    await update_tck(dut)
+    dut.tms.value = 0
+    await update_tck(dut)
+
+
+def rand_inst():
+    return random.choice(list(InstJTAG))
+
+
 @cocotb.test()
 async def run_test(dut):
     await reset_fsm(dut)
 
-    jtag_fsm = JTAGFSM()
-
-    await move_to_jtag_state(dut, JTAGState.SHIFT_IR)
+    for _ in range(1000):
+        inst = rand_inst()
+        await select_instruction(dut, inst)
+        assert (
+            int(inst.value, 2) == dut.u_ir.ir_ff.value
+        ), "Instruction selected is wrong!"
 
 
 def test_jtag_fsm():

@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Mon Aug 26 01:12:34 2024
+[*] Mon Aug 26 23:49:23 2024
 [*]
 [dumpfile] "./run_dir/test_ir_verilator/dump.fst"
-[dumpfile_mtime] "Mon Aug 26 01:11:52 2024"
-[dumpfile_size] 1102
+[dumpfile_mtime] "Mon Aug 26 23:48:22 2024"
+[dumpfile_size] 1216
 [savefile] "/Users/aignacio/projects/jtag_axi/waves_2.gtkw"
 [timestart] 0
 [size] 1440 781
 [pos] 0 53
-*-11.418612 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-13.295637 43000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -39,17 +39,35 @@
 [treeopen] .
 [treeopen] .jtag_wrapper.
 [sst_width] 253
-[signals_width] 144
+[signals_width] 252
 [sst_expanded] 1
 [sst_vpaned_height] 329
-@28
+@29
 jtag_wrapper.trstn
+@28
 jtag_wrapper.tck
+jtag_wrapper.tms
 jtag_wrapper.tdi
 jtag_wrapper.tdo
-jtag_wrapper.tms
-jtag_wrapper.trstn
-@100000029
+@100000028
 jtag_wrapper.u_ir.tap_state[3:0]
+@100c00028
+jtag_wrapper.u_ir.ir_ff[3:0]
+@28
+(0)jtag_wrapper.u_ir.ir_ff[3:0]
+(1)jtag_wrapper.u_ir.ir_ff[3:0]
+(2)jtag_wrapper.u_ir.ir_ff[3:0]
+(3)jtag_wrapper.u_ir.ir_ff[3:0]
+@1401200
+-group_end
+@100c00028
+jtag_wrapper.u_ir.sr_ff[3:0]
+@28
+(0)jtag_wrapper.u_ir.sr_ff[3:0]
+(1)jtag_wrapper.u_ir.sr_ff[3:0]
+(2)jtag_wrapper.u_ir.sr_ff[3:0]
+(3)jtag_wrapper.u_ir.sr_ff[3:0]
+@1401200
+-group_end
 [pattern_trace] 1
 [pattern_trace] 0
