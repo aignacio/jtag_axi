@@ -23,14 +23,15 @@ package jtag_pkg;
   } tap_ctrl_fsm_t;
 
   typedef enum logic [3:0] {
-    BYPASS            = 'b1111,
     EXTEST            = 'b0000,
-    IDCODE            = 'b1110,
+    DEFAULT_FAULT_ISO = 'b0001,
+    DATA_RD_REGISTER  = 'b0011,
+    DATA_WR_REGISTER  = 'b0010,
     SAMPLE_PRELOAD    = 'b1010,
     IC_RESET          = 'b1100,
-    DEFAULT_FAULT_ISO = 'b0001,
     ADDR_REGISTER     = 'b1101,
-    DATA_REGISTER     = 'b1001
+    IDCODE            = 'b1110,
+    BYPASS            = 'b1111
   } ir_decoding_t;
 
   localparam MSB_IR_ENC = $bits(ir_decoding_t)-1;

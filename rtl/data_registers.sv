@@ -21,12 +21,14 @@ module data_registers
   logic         bypass_ff, next_bypass;
   logic [31:0]  sr_ff, next_sr;
   logic [31:0]  addr_ff, next_addr;
-  logic [31:0]  data_ff, next_data;
+  logic [31:0]  data_wr_ff, next_data_wr;
+  logic [31:0]  data_rd_ff, next_data_rd;
 
   always_comb begin
     tdo = 1'b0;
     next_addr = addr_ff;
-    next_data = data_ff;
+    next_data_wr = data_wr_ff;
+    next_data_rd = data_rd_ff;
 
     /* verilator lint_off CASEINCOMPLETE */
     unique0 case (ir_dec)
@@ -60,18 +62,31 @@ module data_registers
           next_addr = sr_ff;
         end
       end
-      DATA_REGISTER: begin
+      DATA_WR_REGISTER: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr = data_ff;
+          next_sr = data_wr_ff;
         end
         else if (tap_state == SHIFT_DR) begin
           tdo = sr_ff[0];
           next_sr = {tdi,sr_ff[31:1]};
         end
         else if (tap_state == UPDATE_DR) begin
-          next_data = sr_ff;
+          next_data_wr = sr_ff;
         end
       end
+      DATA_RD_REGISTER: begin
+        if (tap_state == CAPTURE_DR) begin
+          next_sr = data_rd_ff;
+        end
+        else if (tap_state == SHIFT_DR) begin
+          tdo = sr_ff[0];
+          next_sr = {tdo,sr_ff[31:1]};
+        end
+        else if (tap_state == UPDATE_DR) begin
+          next_data_rd = '0;
+        end
+      end
+
     endcase
     /* verilator lint_on CASEINCOMPLETE */
   end
@@ -89,12 +104,12 @@ module data_registers
 
   always_ff @ (negedge tck or negedge trstn) begin
     if (trstn == 1'b0) begin
-      addr_ff <= '0;
-      data_ff <= '0;
+      addr_ff    <= '0;
+      data_wr_ff <= '0;
     end
     else begin
-      addr_ff <= next_addr;
-      data_ff <= next_data;
+      addr_ff    <= next_addr;
+      data_wr_ff <= next_data_wr;
     end
   end
 endmodule
