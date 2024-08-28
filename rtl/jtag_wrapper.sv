@@ -52,7 +52,6 @@ module jtag_wrapper
     .tdo        (tdo_dr),
     .tap_state  (tap_state),
     .ir_dec     (ir_dec),
-    .select_dr  (select_dr),
     // Data Registers output
     .addr       (addr),
     .data       (data)

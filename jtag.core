@@ -5,16 +5,16 @@ description: JTAG to AXI
 filesets:
   jtag_wrapper:
     files:
-      - ../rtl/include/jtag_pkg.sv
-      - ../rtl/data_registers.sv
-      - ../rtl/instruction_register.sv
-      - ../rtl/jtag_wrapper.sv
-      - ../rtl/tap_ctrl_fsm.sv
+      - rtl/include/jtag_pkg.sv
+      - rtl/data_registers.sv
+      - rtl/instruction_register.sv
+      - rtl/jtag_wrapper.sv
+      - rtl/tap_ctrl_fsm.sv
     file_type: systemVerilogSource
 
   arty7_constraints:
     files:
-      - fpga/arty7_constraints.xdc: {file_type: xdc}
+      - fpga/arty_constraints.xdc: {file_type: xdc}
 
 targets:
   default: &default

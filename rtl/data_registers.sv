@@ -16,7 +16,6 @@ module data_registers
   output  logic           tdo,
   input   tap_ctrl_fsm_t  tap_state,
   input   ir_decoding_t   ir_dec,
-  input                   select_dr,
   output  logic [31:0]    addr,
   output  logic [31:0]    data
 );
@@ -36,7 +35,8 @@ module data_registers
     next_addr = addr_ff;
     next_data_wr = data_wr_ff;
     next_data_rd = data_rd_ff;
-
+    next_bypass = bypass_ff;
+    next_sr = sr_ff;
     /* verilator lint_off CASEINCOMPLETE */
     unique0 case (ir_dec)
       BYPASS: begin
