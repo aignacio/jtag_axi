@@ -10,11 +10,13 @@ module jtag_wrapper
 #(
   parameter [31:0] IDCODE_VAL = 'h10F 
 )(
-  input   trstn,
-  input   tck,
-  input   tms,
-  input   tdi,
-  output  tdo
+  input                 trstn,
+  input                 tck,
+  input                 tms,
+  input                 tdi,
+  output                tdo,
+  output  logic [31:0]  addr,
+  output  logic [31:0]  data
 );
   tap_ctrl_fsm_t  tap_state;
   ir_decoding_t   ir_dec;
@@ -50,6 +52,9 @@ module jtag_wrapper
     .tdo        (tdo_dr),
     .tap_state  (tap_state),
     .ir_dec     (ir_dec),
-    .select_dr  (select_dr)
+    .select_dr  (select_dr),
+    // Data Registers output
+    .addr       (addr),
+    .data       (data)
   );
 endmodule

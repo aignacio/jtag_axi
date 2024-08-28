@@ -1,0 +1,33 @@
+CAPI=2:
+name: core:jtag:v0.0.1
+description: JTAG to AXI
+
+filesets:
+  jtag_wrapper:
+    files:
+      - ../rtl/include/jtag_pkg.sv
+      - ../rtl/data_registers.sv
+      - ../rtl/instruction_register.sv
+      - ../rtl/jtag_wrapper.sv
+      - ../rtl/tap_ctrl_fsm.sv
+    file_type: systemVerilogSource
+
+  arty7_constraints:
+    files:
+      - fpga/arty7_constraints.xdc: {file_type: xdc}
+
+targets:
+  default: &default
+    filesets: [jtag_wrapper]
+    toplevel: jtag_wrapper
+
+  a7_synth:
+    <<: *default
+    default_tool : vivado
+    description : Arty A7 board synthesis
+    filesets_append:
+      - arty7_constraints
+    tools:
+      vivado:
+        part : xc7a35ticsg324-1L
+    toplevel: jtag_wrapper

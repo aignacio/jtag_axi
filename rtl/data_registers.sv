@@ -16,13 +16,20 @@ module data_registers
   output  logic           tdo,
   input   tap_ctrl_fsm_t  tap_state,
   input   ir_decoding_t   ir_dec,
-  input                   select_dr
+  input                   select_dr,
+  output  logic [31:0]    addr,
+  output  logic [31:0]    data
 );
   logic         bypass_ff, next_bypass;
   logic [31:0]  sr_ff, next_sr;
   logic [31:0]  addr_ff, next_addr;
   logic [31:0]  data_wr_ff, next_data_wr;
   logic [31:0]  data_rd_ff, next_data_rd;
+
+  always_comb begin
+    addr = addr_ff;
+    data = data_wr_ff;
+  end
 
   always_comb begin
     tdo = 1'b0;
