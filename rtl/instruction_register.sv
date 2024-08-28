@@ -3,29 +3,32 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 25.08.2024
- * Last Modified Date: 26.08.2024
+ * Last Modified Date: 28.08.2024
  */
 module instruction_register
   import jtag_pkg::*;
 (
-  input                 trstn,
-  input                 tck,
-  input                 tdi,
-  output logic          tdo,
-  input  tap_ctrl_fsm_t tap_state,
-  output ir_decoding_t  ir_dec 
+  input                   trstn,
+  input                   tck,
+  input                   tdi,
+  output  logic           tdo,
+  input   tap_ctrl_fsm_t  tap_state,
+  output  ir_decoding_t   ir_dec,
+  output  logic           select_dr
 );
   ir_decoding_t sr_ff, next_sr;
   ir_decoding_t ir_ff, next_ir;
 
   always_comb begin
     tdo = 1'b0;
+    select_dr = 1'b1;
 
     next_sr = sr_ff;
 
     /* verilator lint_off CASEINCOMPLETE */
     unique0 case (tap_state)
       SHIFT_IR: begin
+        select_dr = 1'b0;
         // IEEE Std 1149.1-2013 - Section 7.2.1
         //Shift toward serial output
         tdo = sr_ff[0];
