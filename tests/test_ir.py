@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 27.08.2024
+# Last Modified Date: 28.08.2024
 import cocotb
 import os
 import logging
@@ -24,7 +24,7 @@ from cocotb.runner import get_runner
 
 
 async def reset_fsm(dut):
-    dut._log.info(f"Resetting JTAG FSM")
+    dut._log.info(f"Reset JTAG FSM")
     dut.trstn.value = 0
     dut.tms.value = 0
     dut.tdi.value = 0
@@ -54,6 +54,7 @@ async def move_to_jtag_state(dut, state):
 
 
 async def select_instruction(dut, instr):
+    dut._log.info(f"Setting up instr: {instr}")
     await move_to_jtag_state(dut, JTAGState.SHIFT_IR)
 
     for idx, tdi_val in enumerate(instr.value[2:][::-1]):
@@ -87,7 +88,7 @@ async def run_test(dut):
 
 def test_jtag_fsm():
     """
-    Check all available instruction through the IR
+    Check all available instructions through the IR
 
     Test ID: 2
     """

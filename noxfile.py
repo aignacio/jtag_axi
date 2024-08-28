@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 08.10.2023
-# Last Modified Date: 26.08.2024
+# Last Modified Date: 28.08.2024
 
 import nox
 
@@ -26,6 +26,7 @@ def run(session):
         "py.test",
         "-n",
         "auto",
+        "-rP",
         "tests",
         *session.posargs
     )
