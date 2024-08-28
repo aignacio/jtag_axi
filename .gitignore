@@ -132,3 +132,4 @@ dmypy.json
 output_verilator
 *.swp
 .DS_Store
+fusesoc.conf
