@@ -59,7 +59,7 @@ module data_registers
         end
         else if (tap_state == SHIFT_DR) begin
           tdo = sr_n_ff[0];
-          next_sr = {tdo,sr_ff[31:1]};
+          next_sr = {tdi,sr_ff[31:1]};
         end
       end
       ADDR_REGISTER: begin
