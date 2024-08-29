@@ -20,7 +20,11 @@ module data_registers
   output  logic [31:0]    data
 );
   logic         bypass_ff, next_bypass;
+  logic         bypass_n_ff;
+
   logic [31:0]  sr_ff, next_sr;
+  logic [31:0]  sr_n_ff;
+
   logic [31:0]  addr_ff, next_addr;
   logic [31:0]  data_wr_ff, next_data_wr;
   logic [31:0]  data_rd_ff, next_data_rd;
@@ -37,6 +41,7 @@ module data_registers
     next_data_rd = data_rd_ff;
     next_bypass = bypass_ff;
     next_sr = sr_ff;
+
     /* verilator lint_off CASEINCOMPLETE */
     unique0 case (ir_dec)
       BYPASS: begin
@@ -44,7 +49,7 @@ module data_registers
           next_bypass = 1'b0;
         end
         else if (tap_state == SHIFT_DR) begin
-          tdo = bypass_ff;
+          tdo = bypass_n_ff;
           next_bypass = tdi;
         end
       end
@@ -53,7 +58,7 @@ module data_registers
           next_sr = IDCODE_VAL;
         end
         else if (tap_state == SHIFT_DR) begin
-          tdo = sr_ff[0];
+          tdo = sr_n_ff[0];
           next_sr = {tdo,sr_ff[31:1]};
         end
       end
@@ -62,7 +67,7 @@ module data_registers
           next_sr = addr_ff;
         end
         else if (tap_state == SHIFT_DR) begin
-          tdo = sr_ff[0];
+          tdo = sr_n_ff[0];
           next_sr = {tdi,sr_ff[31:1]};
         end
         else if (tap_state == UPDATE_DR) begin
@@ -74,7 +79,7 @@ module data_registers
           next_sr = data_wr_ff;
         end
         else if (tap_state == SHIFT_DR) begin
-          tdo = sr_ff[0];
+          tdo = sr_n_ff[0];
           next_sr = {tdi,sr_ff[31:1]};
         end
         else if (tap_state == UPDATE_DR) begin
@@ -86,7 +91,7 @@ module data_registers
           next_sr = data_rd_ff;
         end
         else if (tap_state == SHIFT_DR) begin
-          tdo = sr_ff[0];
+          tdo = sr_n_ff[0];
           next_sr = {tdo,sr_ff[31:1]};
         end
         else if (tap_state == UPDATE_DR) begin
@@ -111,12 +116,16 @@ module data_registers
 
   always_ff @ (negedge tck or negedge trstn) begin
     if (trstn == 1'b0) begin
-      addr_ff    <= '0;
-      data_wr_ff <= '0;
+      addr_ff     <= '0;
+      data_wr_ff  <= '0;
+      sr_n_ff     <= '0;
+      bypass_n_ff <= 1'b0;
     end
     else begin
-      addr_ff    <= next_addr;
-      data_wr_ff <= next_data_wr;
+      addr_ff     <= next_addr;
+      data_wr_ff  <= next_data_wr;
+      sr_n_ff     <= sr_ff;
+      bypass_n_ff <= bypass_ff;
     end
   end
 endmodule

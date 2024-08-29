@@ -17,6 +17,7 @@ module instruction_register
   output  logic           select_dr
 );
   ir_decoding_t sr_ff, next_sr;
+  ir_decoding_t sr_n_ff;
   ir_decoding_t ir_ff, next_ir;
 
   always_comb begin
@@ -31,7 +32,7 @@ module instruction_register
         select_dr = 1'b0;
         // IEEE Std 1149.1-2013 - Section 7.2.1
         //Shift toward serial output
-        tdo = sr_ff[0];
+        tdo = sr_n_ff[0];
         next_sr = ir_decoding_t'({tdi,sr_ff[MSB_IR_ENC:1]});
       end
       CAPTURE_IR: begin
@@ -88,10 +89,17 @@ module instruction_register
       //f) If the TRST* input is provided and a low signal is applied to the
       //input, the latched instruction shall change asynchronously to IDCODE
       //(or, if no device identification register is provided, to BYPASS).
-      ir_ff <= IDCODE;
+      ir_ff   <= IDCODE;
+      //  IEEE Std 1149.1-2013 - Section 4.5.1
+      // a) Changes in the state of the signal driven through TDO shall occur 
+      //    only on the falling edge of either TCK or the optional TRST*.
+      // b) The TDO driver shall be set to its inactive drive state except 
+      //    when the shifting of data is in progress (see 6.1.2).
+      sr_n_ff <= IDCODE;
     end
     else begin
-      ir_ff <= next_ir;
+      ir_ff   <= next_ir;
+      sr_n_ff <= sr_ff;
     end
   end
 endmodule
