@@ -23,27 +23,68 @@ package jtag_pkg;
   } tap_ctrl_fsm_t;
 
   typedef enum logic [3:0] {
-    EXTEST            = 'b0000,
-    DEFAULT_FAULT_ISO = 'b0001,
-    DATA_RD_REGISTER  = 'b0011,
-    DATA_WR_REGISTER  = 'b0010,
-    SAMPLE_PRELOAD    = 'b1010,
+    EXTEST            = 'b0000, // TODO: Implement BSD
+    SAMPLE_PRELOAD    = 'b1010, // TODO: Implement BSD
     IC_RESET          = 'b1100,
-    ADDR_REGISTER     = 'b1101,
     IDCODE            = 'b1110,
-    BYPASS            = 'b1111
+    BYPASS            = 'b1111,
+    ADDR_AXI_REGISTER = 'b0001,
+    DATA_AXI_REGISTER = 'b0010,
+    MGMT_AXI_REGISTER = 'b0011
   } ir_decoding_t;
 
-  localparam MSB_IR_ENC = $bits(ir_decoding_t)-1;
+  // --------------------------
+  //|  JTAG AXI structs/types  |
+  // --------------------------
+  typedef enum logic [2:0] {
+    JTAG_IDLE        = 'd0,
+    JTAG_RUNNING     = 'd1,
+    JTAG_TIMEOUT     = 'd2,
+    JTAG_AXI_OKAY    = 'd3,
+    JTAG_AXI_EXOKAY  = 'd4,
+    JTAG_AXI_SLVERR  = 'd5,
+    JTAG_AXI_DECERR  = 'd6
+  } axi_jtag_status_t;
 
-  //typedef struct package {
+  typedef enum logic {
+    AXI_READ  = 'd0,
+    AXI_WRITE = 'd1
+  } axi_jtag_txn_t;
+
+  typedef struct packed {
+    logic          start;
+    axi_jtag_txn_t txn_type;
+  } s_axi_jtag_ctrl_t;
+
+  typedef struct packed {
+    s_axi_jtag_ctrl_t control;
+    axi_jtag_status_t status;
+  } s_axi_jtag_mgmt_t;
+
+  typedef union packed {
+    logic [MGMT_WIDTH-1:0]  flat;
+    s_axi_jtag_mgmt_t       st; 
+  } s_axi_jtag_mgmt_ut;
+
+  typedef struct packed {
+    logic [DR_MAX_WIDTH-1:0]  addr;
+    logic [DR_MAX_WIDTH-1:0]  data;
+    s_axi_jtag_mgmt_ut        mgmt;
+  } s_axi_jtag_t;
+
+  localparam DEFAULT_FAULT_ISO = 4'b0001;
+  localparam MSB_IR_ENC = $bits(ir_decoding_t)-1;
+  localparam DR_MAX_WIDTH = 32;
+  localparam MGMT_WIDTH = $bits(s_axi_jtag_mgmt_t);
+
+  //typedef struct packed {
   //  logic tck;
   //  logic tms;
   //  logic tdi;
   //  logic trst;
   //} s_jtag_mosi_t;
 
-  //typedef struct package {
+  //typedef struct packed {
   //  logic tdo;
   //} s_jtag_miso_t;
 

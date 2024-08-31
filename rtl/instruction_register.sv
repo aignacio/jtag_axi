@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 25.08.2024
- * Last Modified Date: 28.08.2024
+ * Last Modified Date: 31.08.2024
  */
 module instruction_register
   import jtag_pkg::*;
@@ -39,7 +39,7 @@ module instruction_register
         // IEEE Std 1149.1-2013 - Section 7.2.1
         // Load 01 into bits closest to TDO and, optionally, design-specific 
         // data or fixed values into other bits closer to TDI
-        next_sr = DEFAULT_FAULT_ISO;
+        next_sr = ir_decoding_t'(DEFAULT_FAULT_ISO);
       end
     endcase
     /* verilator lint_on CASEINCOMPLETE */

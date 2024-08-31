@@ -3,15 +3,14 @@ from enum import Enum
 
 # Instruction Register Encoding
 class InstJTAG(Enum):
-    EXTEST            = "0b0000" 
-    DEFAULT_FAULT_ISO = "0b0001"
-    DATA_RD_REGISTER  = "0b0011"
-    DATA_WR_REGISTER  = "0b0010"
+    EXTEST            = "0b0000"
     SAMPLE_PRELOAD    = "0b1010"
     IC_RESET          = "0b1100"
-    ADDR_REGISTER     = "0b1101"
     IDCODE            = "0b1110"
     BYPASS            = "0b1111"
+    ADDR_AXI_REGISTER = "0b0001"
+    DATA_AXI_REGISTER = "0b0010"
+    MGMT_AXI_REGISTER = "0b0011"
 
 # JTAG TAP Controller States
 class JTAGState(Enum):
