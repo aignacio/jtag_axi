@@ -65,7 +65,7 @@ for i in range(100000):
     else:
         jtag.change_state('shift_dr')
         ret = jtag.shift_and_update_register(addr_off)
-    time.sleep(0.001)
+    time.sleep(0.25)
 
 jtag.close()
 ftdi.close()
