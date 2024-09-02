@@ -11,17 +11,20 @@ module jtag_wrapper
   parameter [31:0] IDCODE_VAL = 'h10F, 
   parameter int IC_RST_WIDTH  = 4
 )(
-  input                 trstn,
-  input                 tck,
-  input                 tms,
-  input                 tdi,
-  output                tdo
+  input        trstn,
+  input        tck,
+  input        tms,
+  input        tdi,
+  output       tdo,
+  output logic addr,
+  output logic data
 );
   tap_ctrl_fsm_t  tap_state;
   ir_decoding_t   ir_dec;
   logic           select_dr;
   logic           tdo_ir;
   logic           tdo_dr;
+  s_axi_jtag_t    axi_info;
 
   tap_ctrl_fsm u_tap_ctrl_fsm (
     .trstn      (trstn),
@@ -40,7 +43,9 @@ module jtag_wrapper
     .select_dr  (select_dr)
   );
 
-  assign tdo = (select_dr == 1'b0) ? tdo_ir : tdo_dr;
+  assign tdo  = (select_dr == 1'b0) ? tdo_ir : tdo_dr;
+  assign addr = axi_info.addr[0];
+  assign data = axi_info.data[0];
 
   data_registers #(
     .IDCODE_VAL   (IDCODE_VAL),
@@ -54,7 +59,7 @@ module jtag_wrapper
     .ir_dec     (ir_dec),
     // Data Registers output
     .ic_rst     (),
-    .axi_info   (),
+    .axi_info   (axi_info),
     .axi_update ()
   );
 endmodule

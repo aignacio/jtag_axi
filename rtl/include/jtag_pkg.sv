@@ -62,14 +62,14 @@ package jtag_pkg;
   } s_axi_jtag_mgmt_t;
 
   typedef union packed {
-    logic [MGMT_WIDTH-1:0]  flat;
-    s_axi_jtag_mgmt_t       st; 
+    logic [(MGMT_WIDTH-1):0] flat;
+    s_axi_jtag_mgmt_t        st; 
   } s_axi_jtag_mgmt_ut;
 
   typedef struct packed {
-    logic [ADDR_AXI_WIDTH-1:0] addr;
-    logic [DATA_AXI_WIDTH-1:0] data;
-    s_axi_jtag_mgmt_ut         mgmt;
+    logic [(ADDR_AXI_WIDTH-1):0] addr;
+    logic [(DATA_AXI_WIDTH-1):0] data;
+    s_axi_jtag_mgmt_ut           mgmt;
   } s_axi_jtag_t;
 
   localparam DEFAULT_FAULT_ISO = 4'b0001;
@@ -77,7 +77,7 @@ package jtag_pkg;
   localparam MGMT_WIDTH = $bits(s_axi_jtag_mgmt_t);
   localparam ADDR_AXI_WIDTH = 32;
   localparam DATA_AXI_WIDTH = 64;
-  localparam DR_MAX_WIDTH = ADDR_AXI_WIDTH > DATA_AXI_WIDTH ? ADDR_AXI_WIDTH : 
+  localparam DR_MAX_WIDTH = ADDR_AXI_WIDTH > DATA_AXI_WIDTH ? ADDR_AXI_WIDTH :
                                                               DATA_AXI_WIDTH;
 
   //typedef struct packed {
