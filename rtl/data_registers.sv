@@ -191,7 +191,7 @@ module data_registers
     end
     else begin
       bypass_n_ff <= bypass_ff;
-      idcode_n_ff <= next_idcode;
+      idcode_n_ff <= idcode_ff;
       sr_n_ff     <= sr_ff;
       axi_n_ff    <= axi_ff;
       ic_rst_n_ff <= ic_rst_ff;
