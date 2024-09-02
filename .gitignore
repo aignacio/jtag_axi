@@ -133,4 +133,5 @@ output_verilator
 *.swp
 .DS_Store
 fusesoc.conf
-scripts/ftdi
+jtag_axi/ftdi
+
