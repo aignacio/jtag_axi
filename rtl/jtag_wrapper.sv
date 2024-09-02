@@ -30,7 +30,7 @@ module jtag_wrapper
     .tap_state  (tap_state)
   );
 
-  instruction_register u_ir (
+  instruction_register u_instruction_register (
     .trstn      (trstn),
     .tck        (tck),
     .tdi        (tdi),
@@ -54,6 +54,7 @@ module jtag_wrapper
     .ir_dec     (ir_dec),
     // Data Registers output
     .ic_rst     (),
-    .axi_info   ()
+    .axi_info   (),
+    .axi_update ()
   );
 endmodule

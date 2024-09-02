@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Mon Aug 26 23:49:23 2024
+[*] Sun Sep  1 19:42:25 2024
 [*]
-[dumpfile] "./run_dir/test_ir_verilator/dump.fst"
-[dumpfile_mtime] "Mon Aug 26 23:48:22 2024"
-[dumpfile_size] 1216
-[savefile] "/Users/aignacio/projects/jtag_axi/waves_2.gtkw"
+[dumpfile] "run_dir/test_dr_verilator/dump.fst"
+[dumpfile_mtime] "Sun Sep  1 19:40:39 2024"
+[dumpfile_size] 2076
+[savefile] "waves_2.gtkw"
 [timestart] 0
-[size] 1440 781
-[pos] 0 53
-*-13.295637 43000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[size] 1808 683
+[pos] 2136 1463
+*-13.307725 63000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -38,10 +38,14 @@
 [markername] ZZ
 [treeopen] .
 [treeopen] .jtag_wrapper.
+[treeopen] .jtag_wrapper.u_data_registers.
+[treeopen] .jtag_wrapper.u_data_registers.axi_info.
+[treeopen] .jtag_wrapper.u_data_registers.axi_info.mgmt.
+[treeopen] .jtag_wrapper.u_data_registers.axi_info.mgmt.st.
 [sst_width] 253
-[signals_width] 252
+[signals_width] 246
 [sst_expanded] 1
-[sst_vpaned_height] 329
+[sst_vpaned_height] 278
 @29
 jtag_wrapper.trstn
 @28
@@ -50,24 +54,30 @@ jtag_wrapper.tms
 jtag_wrapper.tdi
 jtag_wrapper.tdo
 @100000028
-jtag_wrapper.u_ir.tap_state[3:0]
+jtag_wrapper.u_instruction_register.tap_state[3:0]
 @100c00028
-jtag_wrapper.u_ir.ir_ff[3:0]
+jtag_wrapper.u_instruction_register.ir_ff[3:0]
 @28
-(0)jtag_wrapper.u_ir.ir_ff[3:0]
-(1)jtag_wrapper.u_ir.ir_ff[3:0]
-(2)jtag_wrapper.u_ir.ir_ff[3:0]
-(3)jtag_wrapper.u_ir.ir_ff[3:0]
+(0)jtag_wrapper.u_instruction_register.ir_ff[3:0]
+(1)jtag_wrapper.u_instruction_register.ir_ff[3:0]
+(2)jtag_wrapper.u_instruction_register.ir_ff[3:0]
+(3)jtag_wrapper.u_instruction_register.ir_ff[3:0]
 @1401200
 -group_end
-@100c00028
-jtag_wrapper.u_ir.sr_ff[3:0]
+@200
+-Data Registers
 @28
-(0)jtag_wrapper.u_ir.sr_ff[3:0]
-(1)jtag_wrapper.u_ir.sr_ff[3:0]
-(2)jtag_wrapper.u_ir.sr_ff[3:0]
-(3)jtag_wrapper.u_ir.sr_ff[3:0]
-@1401200
--group_end
+jtag_wrapper.u_data_registers.bypass_ff
+@22
+jtag_wrapper.u_data_registers.idcode_ff[31:0]
+jtag_wrapper.u_data_registers.ic_rst_ff[3:0]
+jtag_wrapper.u_data_registers.axi_ff.addr[31:0]
+jtag_wrapper.u_data_registers.axi_ff.data[31:0]
+@28
+jtag_wrapper.u_data_registers.axi_info.mgmt.st.control.start
+@100000028
+jtag_wrapper.u_data_registers.axi_info.mgmt.st.control.txn_type
+@28
+jtag_wrapper.u_data_registers.axi_update_ff
 [pattern_trace] 1
 [pattern_trace] 0

@@ -1,5 +1,5 @@
 from enum import Enum
-
+from cocotb.triggers import ClockCycles, Timer
 
 # Instruction Register Encoding
 class InstJTAG(Enum):
@@ -117,8 +117,8 @@ class JTAGFSM:
             self.state = JTAGState.TEST_LOGIC_RESET
 
 
-# JTAG State Transitions
-jtag_trans = {
+# JTAG State Transitions - From TEST_LOGIC_RESET
+JtagTrans = {
     JTAGState.TEST_LOGIC_RESET: [1, 1, 1, 1, 1],  # From any state
     JTAGState.RUN_TEST_IDLE: [0],  # From TEST_LOGIC_RESET  or other states
     JTAGState.SELECT_DR_SCAN: [0, 1],  # From RUN_TEST_IDLE
@@ -136,3 +136,78 @@ jtag_trans = {
     JTAGState.EXIT2_IR: [0, 1, 1, 0, 1, 0, 1],  # From PAUSE_IR
     JTAGState.UPDATE_IR: [0, 1, 1, 0, 1, 1],  # From EXIT2_IR or SHIFT_IR
 }
+
+async def reset_fsm(dut):
+    dut._log.info(f"Reset JTAG FSM")
+    dut.trstn.value = 0
+    dut.tms.value = 0
+    dut.tdi.value = 0
+    dut.tck.value = 0
+    await Timer(10, units="ns")
+    dut.trstn.value = 1
+    await Timer(2, units="ns")
+
+
+async def update_tck(dut):
+    dut.tck.value = 0
+    await Timer(1, units="ns")
+    dut.tck.value = 1
+    await Timer(1, units="ns")
+
+
+async def move_to_jtag_state(dut, state):
+    tms = dut.tms
+
+    transitions = JtagTrans[state]
+
+    await reset_fsm(dut)
+
+    for tms_value in transitions:
+        dut.tms.value = tms_value
+        await update_tck(dut)
+
+
+async def select_instruction(dut, instr):
+    dut._log.info(f"Setting up instr: {instr}")
+    await move_to_jtag_state(dut, JTAGState.SHIFT_IR)
+
+    for idx, tdi_val in enumerate(instr.value[2:][::-1]):
+        dut.tdi.value = int(tdi_val)
+        if idx == len(instr.value[2:]) - 1:
+            break
+        await update_tck(dut)
+
+    dut.tms.value = 1
+    await update_tck(dut)
+    await update_tck(dut)
+    dut.tms.value = 0
+    await update_tck(dut)
+
+
+async def move_to_shift_dr(dut, value):
+    dut._log.info(f"Moving to shift DR")
+
+    # Assuming we're on RUN_TEST_IDLE
+    dut.tdi.value = 0
+    dut.tms.value = 1
+    await update_tck(dut)
+    dut.tms.value = 0
+    await update_tck(dut)
+    dut.tms.value = 0
+    await update_tck(dut)
+
+    tdo = []
+    for idx, tdi_val in enumerate(value[::-1]):
+        dut.tdi.value = tdi_val
+        if idx == len(value) - 1:
+            break
+        tdo.append(dut.tdo.value)
+        await update_tck(dut)
+    dut.tms.value = 1
+    tdo.append(dut.tdo.value)
+    await update_tck(dut)
+    await update_tck(dut)
+    dut.tms.value = 0
+    await update_tck(dut)
+
+    return tdo[::-1]

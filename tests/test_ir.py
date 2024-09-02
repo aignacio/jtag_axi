@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 31.08.2024
+# Last Modified Date: 01.09.2024
 import cocotb
 import os
 import logging
@@ -14,60 +14,13 @@ import random
 from pathlib import Path
 from random import randrange
 from const.const import cfg
-from const.jtag import JTAGFSM, JTAGState, jtag_trans, InstJTAG
-from cocotb.triggers import ClockCycles, Timer
+from const.jtag import InstJTAG
+from const.jtag import reset_fsm, select_instruction
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb.regression import TestFactory
 from cocotb.result import TestFailure
 from cocotb.runner import get_runner
-
-
-async def reset_fsm(dut):
-    dut._log.info(f"Reset JTAG FSM")
-    dut.trstn.value = 0
-    dut.tms.value = 0
-    dut.tdi.value = 0
-    dut.tck.value = 0
-    await Timer(10, units="ns")
-    dut.trstn.value = 1
-    await Timer(2, units="ns")
-
-
-async def update_tck(dut):
-    dut.tck.value = 0
-    await Timer(1, units="ns")
-    dut.tck.value = 1
-    await Timer(1, units="ns")
-
-
-async def move_to_jtag_state(dut, state):
-    tms = dut.tms
-
-    transitions = jtag_trans[state]
-
-    await reset_fsm(dut)
-
-    for tms_value in transitions:
-        dut.tms.value = tms_value
-        await update_tck(dut)
-
-
-async def select_instruction(dut, instr):
-    dut._log.info(f"Setting up instr: {instr}")
-    await move_to_jtag_state(dut, JTAGState.SHIFT_IR)
-
-    for idx, tdi_val in enumerate(instr.value[2:][::-1]):
-        dut.tdi.value = int(tdi_val)
-        if idx == len(instr.value[2:]) - 1:
-            break
-        await update_tck(dut)
-
-    dut.tms.value = 1
-    await update_tck(dut)
-    await update_tck(dut)
-    dut.tms.value = 0
-    await update_tck(dut)
 
 
 def rand_inst():
@@ -82,7 +35,7 @@ async def run_test(dut):
         inst = rand_inst()
         await select_instruction(dut, inst)
         assert (
-            int(inst.value, 2) == dut.u_ir.ir_ff.value
+            int(inst.value, 2) == dut.u_instruction_register.ir_ff.value
         ), "Instruction selected is wrong!"
 
 
