@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 02.09.2024
+# Last Modified Date: 05.09.2024
 import cocotb
 import os
 import logging
@@ -51,22 +51,34 @@ async def run_test(dut):
     ), "IC reset shift DR is not working"
     #BYPASS
     await select_instruction(dut, InstJTAG.BYPASS)
-    bypass_val = gen_bin_list(4)
-    val = await move_to_shift_dr(dut, bypass_val[::-1])
-    print(f"Shifted in/out: {bypass_val}/{val[::-1]}")
+    bypass_val = gen_bin_list(10)
+    val = await move_to_shift_dr(dut, bypass_val)
+    print(f"Shifted in/out: \n{bypass_val}\n{val}")
     #IDCODE
     await select_instruction(dut, InstJTAG.IDCODE)
     idcode_val = gen_bin_list(32)
     val = await move_to_shift_dr(dut, idcode_val)
     print(f"Shifted out: {val}")
     print(f"Shifted in/out: {hex(bin_list_to_num(idcode_val))}/{hex(bin_list_to_num(val))}")
-
-    # assert (
-        # bin_list_to_num(ic_reset_random_val) == dut.u_data_registers.ic_rst_ff.value
-    # ), "IC reset shift DR is not working"
     #ADDR_AXI_REGISTER
+    await select_instruction(dut, InstJTAG.ADDR_AXI_REGISTER)
+    val = gen_bin_list(32)
+    val = await move_to_shift_dr(dut, val)
+    print(f"Shifted out: {val}")
+    print(f"Shifted in/out: {hex(bin_list_to_num(idcode_val))}/{hex(bin_list_to_num(val))}")
     #DATA_AXI_REGISTER
+    await select_instruction(dut, InstJTAG.DATA_AXI_REGISTER)
+    val = gen_bin_list(64)
+    val = await move_to_shift_dr(dut, val)
+    print(f"Shifted out: {val}")
+    print(f"Shifted in/out: {hex(bin_list_to_num(idcode_val))}/{hex(bin_list_to_num(val))}")
     #MGMT_AXI_REGISTER
+    await select_instruction(dut, InstJTAG.MGMT_AXI_REGISTER)
+    val = gen_bin_list(5)
+    val = await move_to_shift_dr(dut, val)
+    print(f"Shifted out: {val}")
+    print(f"Shifted in/out: {hex(bin_list_to_num(idcode_val))}/{hex(bin_list_to_num(val))}")
+
 
 
 def test_jtag_fsm():

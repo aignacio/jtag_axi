@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 28.08.2024
- * Last Modified Date: 02.09.2024
+ * Last Modified Date: 04.09.2024
  */
 module data_registers
   import jtag_pkg::*;
@@ -34,7 +34,6 @@ module data_registers
   logic [(DR_MAX_WIDTH-1):0] sr_n_ff;
 
   s_axi_jtag_t axi_ff, next_axi;
-  s_axi_jtag_t axi_n_ff;
 
   logic axi_update_ff, next_axi_update;
 
@@ -186,14 +185,12 @@ module data_registers
       bypass_n_ff <= 1'b0;
       idcode_n_ff <= '0;
       sr_n_ff     <= '0;
-      axi_n_ff    <= s_axi_jtag_t'(0);
       ic_rst_n_ff <= '0;
     end
     else begin
       bypass_n_ff <= bypass_ff;
       idcode_n_ff <= idcode_ff;
       sr_n_ff     <= sr_ff;
-      axi_n_ff    <= axi_ff;
       ic_rst_n_ff <= ic_rst_ff;
     end
   end
