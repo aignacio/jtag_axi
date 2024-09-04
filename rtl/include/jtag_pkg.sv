@@ -61,6 +61,10 @@ package jtag_pkg;
     axi_jtag_status_t status;
   } s_axi_jtag_mgmt_t;
 
+  localparam MGMT_WIDTH = $bits(s_axi_jtag_mgmt_t);
+  localparam ADDR_AXI_WIDTH = 32;
+  localparam DATA_AXI_WIDTH = 64;
+
   typedef union packed {
     logic [(MGMT_WIDTH-1):0] flat;
     s_axi_jtag_mgmt_t        st; 
@@ -74,9 +78,6 @@ package jtag_pkg;
 
   localparam DEFAULT_FAULT_ISO = 4'b0001;
   localparam MSB_IR_ENC = $bits(ir_decoding_t)-1;
-  localparam MGMT_WIDTH = $bits(s_axi_jtag_mgmt_t);
-  localparam ADDR_AXI_WIDTH = 32;
-  localparam DATA_AXI_WIDTH = 64;
   localparam DR_MAX_WIDTH = ADDR_AXI_WIDTH > DATA_AXI_WIDTH ? ADDR_AXI_WIDTH :
                                                               DATA_AXI_WIDTH;
 
