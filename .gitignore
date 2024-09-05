@@ -134,4 +134,4 @@ output_verilator
 .DS_Store
 fusesoc.conf
 jtag_axi/ftdi
-
+RM_ME_rtl_pp.sv

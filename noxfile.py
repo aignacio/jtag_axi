@@ -4,12 +4,15 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 08.10.2023
-# Last Modified Date: 04.09.2024
+# Last Modified Date: 05.09.2024
 
 import nox
 import os
 
 TOP_MODULE = "jtag_wrapper"
+SRC_DIR = "rtl"
+INCLUDE_DIR = "rtl/include"
+SLANG_CMD = "slang"
 
 
 @nox.session(python=["3.6", "3.7", "3.8", "3.9", "3.10", "3.12"], reuse_venv=True)
@@ -24,14 +27,32 @@ def run(session):
     session.run("py.test", "-n", "auto", "-rP", "tests", *session.posargs)
 
 
-# Define the source directory and include directory
-SRC_DIR = "rtl"
-INCLUDE_DIR = "rtl/include"
-SLANG_CMD = "slang"
+@nox.session(reuse_venv=True)
+def sv_lint(session):
+    slang_command = get_sv()
+    slang_command.append("--lint-only")
+    session.log(f"Running: {' '.join(slang_command)}")
+    session.run(*slang_command, external=True)
 
 
 @nox.session(reuse_venv=True)
-def run_slang(session):
+def sv_pre(session):
+    slang_command = get_sv()
+    slang_command.append("--preprocess")
+    slang_command.append("--comments")
+    slang_command += [">", "RM_ME_rtl_pp.sv"]
+    session.log(f"Running: {' '.join(slang_command)}")
+    session.run("bash", "-c", " ".join(slang_command), external=True)
+
+
+@nox.session(reuse_venv=True)
+def sv_run(session):
+    slang_command = get_sv()
+    session.log(f"Running: {' '.join(slang_command)}")
+    session.run(*slang_command, external=True)
+
+
+def get_sv():
     """Gather all SystemVerilog files and run slang with an include directory."""
     # Recursively find all .sv files in the SRC_DIR
     sv_files = []
@@ -42,6 +63,7 @@ def run_slang(session):
     # Check if there are any SystemVerilog files found
     if not sv_files:
         session.error("No SystemVerilog files found in the source directory.")
+
     # Construct the slang command with include directory
     slang_command = [
         SLANG_CMD,
@@ -49,9 +71,7 @@ def run_slang(session):
         INCLUDE_DIR,
         "--top",
         TOP_MODULE,
-        "-Weverything"
+        "-Weverything",
     ] + sv_files
-    # Print the command for debugging purposes
-    session.log(f"Running: {' '.join(slang_command)}")
-    # Run the slang command
-    session.run(*slang_command, external=True)
+
+    return slang_command

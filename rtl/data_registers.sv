@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 28.08.2024
- * Last Modified Date: 04.09.2024
+ * Last Modified Date: 05.09.2024
  */
 module data_registers
   import jtag_pkg::*;
@@ -28,8 +28,6 @@ module data_registers
   logic [31:0] idcode_n_ff;
 
   logic [(IC_RST_WIDTH-1):0] ic_rst_ff, next_ic_rst;
-  logic [(IC_RST_WIDTH-1):0] ic_rst_n_ff;
-
   logic [(DR_MAX_WIDTH-1):0] sr_ff, next_sr;
   logic [(DR_MAX_WIDTH-1):0] sr_n_ff;
 
@@ -185,13 +183,11 @@ module data_registers
       bypass_n_ff <= 1'b0;
       idcode_n_ff <= '0;
       sr_n_ff     <= '0;
-      ic_rst_n_ff <= '0;
     end
     else begin
       bypass_n_ff <= bypass_ff;
       idcode_n_ff <= idcode_ff;
       sr_n_ff     <= sr_ff;
-      ic_rst_n_ff <= ic_rst_ff;
     end
   end
 
