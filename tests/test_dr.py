@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 05.09.2024
+# Last Modified Date: 06.09.2024
 import cocotb
 import os
 import logging
@@ -41,47 +41,59 @@ def bin_list_to_num(binary_list):
 async def run_test(dut):
     await reset_fsm(dut)
 
-    #IC_RESET
+    dut.log.info(f"------{InstJTAG.IC_RESET}------")
     await select_instruction(dut, InstJTAG.IC_RESET)
     ic_reset_random_val = gen_bin_list(4)
     val = await move_to_shift_dr(dut, ic_reset_random_val)
-    print(f"Shifted in/out: {ic_reset_random_val}/{val}")
+    dut.log.info(f"Shifted in/out: {ic_reset_random_val}/{val}")
     assert (
         bin_list_to_num(ic_reset_random_val) == dut.u_data_registers.ic_rst_ff.value
-    ), "IC reset shift DR is not working"
-    #BYPASS
+    ), "IC Reset does not match shifted data"
+
+    dut.log.info(f"------{InstJTAG.BYPASS}------")
     await select_instruction(dut, InstJTAG.BYPASS)
-    bypass_val = gen_bin_list(10)
+    bypass_val = gen_bin_list(20)
     val = await move_to_shift_dr(dut, bypass_val)
-    print(f"Shifted in/out: \n{bypass_val}\n{val}")
-    #IDCODE
+    dut.log.info(f"Shifted in/out: \nIN = {bypass_val}\nOUT = {val} (SHIFTED BY ONE)")
+
+    dut.log.info(f"------{InstJTAG.IDCODE}------")
     await select_instruction(dut, InstJTAG.IDCODE)
     idcode_val = gen_bin_list(32)
     val = await move_to_shift_dr(dut, idcode_val)
-    print(f"Shifted out: {val}")
-    print(f"Shifted in/out: {hex(bin_list_to_num(idcode_val))}/{hex(bin_list_to_num(val))}")
-    #ADDR_AXI_REGISTER
+    dut.log.info(f"Shifted in/out: {hex(bin_list_to_num(idcode_val))}/{hex(bin_list_to_num(val))}")
+    assert (
+        bin_list_to_num(val) == 0x10f
+    ), f"IDCODE does not match expected value shifted out ({bin_list_to_num(val)}) != 0x10F"
+
+    dut.log.info(f"------{InstJTAG.ADDR_AXI_REGISTER}------")
     await select_instruction(dut, InstJTAG.ADDR_AXI_REGISTER)
-    val = gen_bin_list(32)
-    val = await move_to_shift_dr(dut, val)
-    print(f"Shifted out: {val}")
-    print(f"Shifted in/out: {hex(bin_list_to_num(idcode_val))}/{hex(bin_list_to_num(val))}")
-    #DATA_AXI_REGISTER
+    val_in = gen_bin_list(32)
+    val_out = await move_to_shift_dr(dut, val_in)
+    dut.log.info(f"Shifted in/out: {hex(bin_list_to_num(val_in))}/{hex(bin_list_to_num(val_out))}")
+    # assert (
+        # bin_list_to_num(val) == dut.u_data_registers.axi_ff.addr.value
+    # ), "ADDR AXI Register does not match shifted data"
+
+    dut.log.info(f"------{InstJTAG.DATA_AXI_REGISTER}------")
     await select_instruction(dut, InstJTAG.DATA_AXI_REGISTER)
-    val = gen_bin_list(64)
-    val = await move_to_shift_dr(dut, val)
-    print(f"Shifted out: {val}")
-    print(f"Shifted in/out: {hex(bin_list_to_num(idcode_val))}/{hex(bin_list_to_num(val))}")
-    #MGMT_AXI_REGISTER
+    val_in = gen_bin_list(64)
+    val_out = await move_to_shift_dr(dut, val_in)
+    dut.log.info(f"Shifted in/out: {hex(bin_list_to_num(val_in))}/{hex(bin_list_to_num(val_out))}")
+    # assert (
+        # bin_list_to_num(val) == dut.u_data_registers.axi_ff.data.value
+    # ), "DATA AXI Register does not match shifted data"
+
+    dut.log.info(f"------{InstJTAG.MGMT_AXI_REGISTER}------")
     await select_instruction(dut, InstJTAG.MGMT_AXI_REGISTER)
-    val = gen_bin_list(5)
-    val = await move_to_shift_dr(dut, val)
-    print(f"Shifted out: {val}")
-    print(f"Shifted in/out: {hex(bin_list_to_num(idcode_val))}/{hex(bin_list_to_num(val))}")
+    val_in = gen_bin_list(5)
+    val_out = await move_to_shift_dr(dut, val_in)
+    dut.log.info(f"Shifted in/out: {hex(bin_list_to_num(val_in))}/{hex(bin_list_to_num(val_out))}")
+    # assert (
+        # bin_list_to_num(val) == dut.u_data_registers.axi_ff.mgmt.flat.value
+    # ), "MGMT AXI Register does not match shifted data"
 
 
-
-def test_jtag_fsm():
+def test_dr():
     """
     Check all available data registers
 

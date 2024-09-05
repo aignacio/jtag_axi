@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 01.09.2024
+# Last Modified Date: 06.09.2024
 import cocotb
 import os
 import logging
@@ -39,7 +39,7 @@ async def run_test(dut):
         ), "Instruction selected is wrong!"
 
 
-def test_jtag_fsm():
+def test_ir():
     """
     Check all available instructions through the IR
 
