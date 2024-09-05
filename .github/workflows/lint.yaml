@@ -35,4 +35,4 @@ jobs:
     - name: Install nox
       run: pip install --upgrade nox
     - name: Run Lint
-      run: nox -s "run_slang"
+      run: nox -s "sv_lint"
