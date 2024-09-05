@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 08.10.2023
-# Last Modified Date: 05.09.2024
+# Last Modified Date: 06.09.2024
 
 import nox
 import os
@@ -73,5 +73,6 @@ def get_sv():
         TOP_MODULE,
         "-Weverything",
     ] + sv_files
+    # ] + sv_files + ["--single-unit", "--libraries-inherit-macros"]
 
     return slang_command
