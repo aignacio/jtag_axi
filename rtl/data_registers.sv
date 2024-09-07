@@ -3,12 +3,12 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 28.08.2024
- * Last Modified Date: 05.09.2024
+ * Last Modified Date: 08.09.2024
  */
 module data_registers
   import jtag_pkg::*;
 #(
-  parameter [31:0] IDCODE_VAL = 'h10F,
+  parameter [31:0] IDCODE_VAL = 'hBADC0FFE, 
   parameter int IC_RST_WIDTH  = 4
 )(
   input                              trstn,
@@ -113,7 +113,7 @@ module data_registers
           next_ic_rst = sr_ff[(IC_RST_WIDTH-1):0];
         end
       end
-      ADDR_AXI_REGISTER: begin
+      ADDR_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
           next_sr[(ADDR_AXI_WIDTH-1):0] = axi_ff.addr;
         end
@@ -125,19 +125,28 @@ module data_registers
           next_axi.addr = sr_ff[(ADDR_AXI_WIDTH-1):0];
         end
       end
-      DATA_AXI_REGISTER: begin
+      DATA_R_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr[(DATA_AXI_WIDTH-1):0] = axi_ff.data;
+          next_sr[(DATA_AXI_WIDTH-1):0] = axi_ff.data_read;
+        end
+        else if (tap_state == SHIFT_DR) begin
+          next_sr[(DATA_AXI_WIDTH-1):0] = {tdi,sr_ff[(DATA_AXI_WIDTH-1):1]};
+          tdo = sr_n_ff[0];
+        end
+      end
+      DATA_W_AXI_REG: begin
+        if (tap_state == CAPTURE_DR) begin
+          next_sr[(DATA_AXI_WIDTH-1):0] = axi_ff.data_write;
         end
         else if (tap_state == SHIFT_DR) begin
           next_sr[(DATA_AXI_WIDTH-1):0] = {tdi,sr_ff[(DATA_AXI_WIDTH-1):1]};
           tdo = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
-          next_axi.data = sr_ff[(DATA_AXI_WIDTH-1):0];
+          next_axi.data_write = sr_ff[(DATA_AXI_WIDTH-1):0];
         end
       end
-      MGMT_AXI_REGISTER: begin
+      MGMT_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
           next_sr[(MGMT_WIDTH-1):0] = axi_ff.mgmt.flat;
         end

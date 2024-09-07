@@ -3,12 +3,12 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 25.08.2024
- * Last Modified Date: 01.09.2024
+ * Last Modified Date: 08.09.2024
  */
 module jtag_wrapper
   import jtag_pkg::*;
 #(
-  parameter [31:0] IDCODE_VAL = 'h10F, 
+  parameter [31:0] IDCODE_VAL = 'hBADC0FFE,
   parameter int IC_RST_WIDTH  = 4
 )(
   input        trstn,
@@ -45,7 +45,7 @@ module jtag_wrapper
 
   assign tdo  = (select_dr == 1'b0) ? tdo_ir : tdo_dr;
   assign addr = axi_info.addr[0];
-  assign data = axi_info.data[0];
+  assign data = axi_info.data_write[0];
 
   data_registers #(
     .IDCODE_VAL   (IDCODE_VAL),

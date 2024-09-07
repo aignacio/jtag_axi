@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 07.09.2024
+# Last Modified Date: 08.09.2024
 import cocotb
 import os
 import logging
@@ -117,9 +117,10 @@ if cocotb.SIM_NAME:
             (InstJTAG.BYPASS, 1, True),
             (InstJTAG.IC_RESET, 4, False),
             (InstJTAG.IDCODE, 32, True),
-            (InstJTAG.ADDR_AXI_REGISTER, 32, False),
-            (InstJTAG.DATA_AXI_REGISTER, 64, False),
-            (InstJTAG.MGMT_AXI_REGISTER, 5, False),
+            (InstJTAG.ADDR_AXI_REG, 32, False),
+            (InstJTAG.DATA_W_AXI_REG, 64, False),
+            (InstJTAG.DATA_R_AXI_REG, 64, True),
+            (InstJTAG.MGMT_AXI_REG, 5, False),
         ],
     )
     factory.generate_tests()

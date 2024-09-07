@@ -23,14 +23,15 @@ package jtag_pkg;
   } tap_ctrl_fsm_t;
 
   typedef enum logic [3:0] {
-    EXTEST            = 'b0000, // TODO: Implement BSD
-    SAMPLE_PRELOAD    = 'b1010, // TODO: Implement BSD
-    IC_RESET          = 'b1100,
-    IDCODE            = 'b1110,
-    BYPASS            = 'b1111,
-    ADDR_AXI_REGISTER = 'b0001,
-    DATA_AXI_REGISTER = 'b0010,
-    MGMT_AXI_REGISTER = 'b0011
+    EXTEST         = 'b0000, // TODO: Implement BSD
+    SAMPLE_PRELOAD = 'b1010, // TODO: Implement BSD
+    IC_RESET       = 'b1100,
+    IDCODE         = 'b1110,
+    BYPASS         = 'b1111,
+    ADDR_AXI_REG   = 'b0001,
+    DATA_W_AXI_REG = 'b0010,
+    DATA_R_AXI_REG = 'b0011,
+    MGMT_AXI_REG   = 'b0100
   } ir_decoding_t;
 
   // --------------------------
@@ -72,7 +73,8 @@ package jtag_pkg;
 
   typedef struct packed {
     logic [(ADDR_AXI_WIDTH-1):0] addr;
-    logic [(DATA_AXI_WIDTH-1):0] data;
+    logic [(DATA_AXI_WIDTH-1):0] data_write;
+    logic [(DATA_AXI_WIDTH-1):0] data_read;
     s_axi_jtag_mgmt_ut           mgmt;
   } s_axi_jtag_t;
 
