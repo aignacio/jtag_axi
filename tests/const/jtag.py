@@ -199,13 +199,23 @@ async def move_to_shift_dr(dut, value):
     tdo = []
     for idx, tdi_val in enumerate(value[::-1]):
         dut.tdi.value = tdi_val
+
         if idx == len(value) - 1:
             break
-        await update_tck(dut)
+
+        dut.tck.value = 0
+        await Timer(1, units="ns")
         tdo.append(dut.tdo.value)
+        dut.tck.value = 1
+        await Timer(1, units="ns")
+
     dut.tms.value = 1
+
+    dut.tck.value = 0
+    await Timer(1, units="ns")
     tdo.append(dut.tdo.value)
-    await update_tck(dut)
+    dut.tck.value = 1
+    await Timer(1, units="ns")
     await update_tck(dut)
     dut.tms.value = 0
     await update_tck(dut)

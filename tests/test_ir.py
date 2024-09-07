@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 06.09.2024
+# Last Modified Date: 07.09.2024
 import cocotb
 import os
 import logging
@@ -67,7 +67,3 @@ def test_ir():
     runner.test(
         hdl_toplevel="jtag_wrapper", test_module=test_name, plusargs=cfg.PLUS_ARGS
     )
-
-
-if __name__ == "__main__":
-    test_basic()

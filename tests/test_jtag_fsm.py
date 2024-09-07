@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 26.08.2024
+# Last Modified Date: 07.09.2024
 import cocotb
 import os
 import logging
@@ -95,7 +95,3 @@ def test_jtag_fsm():
     runner.test(
         hdl_toplevel="tap_ctrl_fsm", test_module=test_name, plusargs=cfg.PLUS_ARGS
     )
-
-
-if __name__ == "__main__":
-    test_basic()
