@@ -51,12 +51,10 @@ class JTAGDataRegister:
         self.read_only = read_only
 
     def display(self):
-        self.dut.log.info(
-            "------------------------------\n"
-            f"IR Instruction: {self.ir_ins}\n"
-            f"Shift Length: {self.shift_length}\n"
-            f"Read Only: {self.read_only}\n"
-        )
+        self.dut.log.info("------------------------------")
+        self.dut.log.info(f"IR Instruction: {self.ir_ins}")
+        self.dut.log.info(f"Shift Length: {self.shift_length}")
+        self.dut.log.info(f"Read Only: {self.read_only}")
 
 
 @cocotb.test()
@@ -68,24 +66,16 @@ async def run_test(dut, jtag_dr=(InstJTAG.BYPASS, 1, True)):
     await select_instruction(dut, dr.ir_ins)
     shifted_in = gen_bin_list(dr.shift_length)
     shifted_out = await move_to_shift_dr(dut, shifted_in)
-    dut.log.info(
-        f"\nShifted in/out:"
-        f"\nIN = {shifted_in}"
-        f"\nOUT = {shifted_out}"
-    )
-    dut.log.info(
-        "\nHex. dump value:"
-        f"\nin  = {hex(bin_list_to_num(shifted_in))}"
-        f"\nout = {hex(bin_list_to_num(shifted_out))}"
-    )
+    dut.log.info(f"-> Shifted:")
+    dut.log.info(f"\tin  = {hex(bin_list_to_num(shifted_in))}")
+    dut.log.info(f"\tout = {hex(bin_list_to_num(shifted_out))}")
+
     if dr.read_only == False:
         shifted_out = await move_to_shift_dr(dut, shifted_in)
-        dut.log.info(
-            f"\nChecking...:"
-            f"\nIN = {shifted_in}"
-            f"\nOUT = {shifted_out}"
-        )
-        assert(shifted_in == shifted_out),f"Shifted out != Shifted in"
+        dut.log.info(f"-> [RW] Comparing value shifted second time:")
+        dut.log.info(f"\tin  = {hex(bin_list_to_num(shifted_in))}")
+        dut.log.info(f"\tout = {hex(bin_list_to_num(shifted_out))}")
+        assert(shifted_in == shifted_out),"Shifted out != Shifted in"
 
 
 
