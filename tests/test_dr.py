@@ -118,9 +118,8 @@ if cocotb.SIM_NAME:
             (InstJTAG.IC_RESET, 4, False),
             (InstJTAG.IDCODE, 32, True),
             (InstJTAG.ADDR_AXI_REG, 32, False),
-            (InstJTAG.DATA_W_AXI_REG, 64, False),
-            (InstJTAG.DATA_R_AXI_REG, 64, True),
-            (InstJTAG.CTRL_AXI_REG, 2, False),
+            (InstJTAG.DATA_W_AXI_REG, 32, False),
+            (InstJTAG.CTRL_AXI_REG, 39, False),
             (InstJTAG.STATUS_AXI_REG, 3, True),
         ],
     )

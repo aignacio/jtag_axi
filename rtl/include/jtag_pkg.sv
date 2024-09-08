@@ -2,6 +2,11 @@
   `define __JTAG_PKG__
 
 package jtag_pkg;
+  import amba_axi_pkg::axi_size_t;
+  import amba_axi_pkg::axi_addr_t;
+  import amba_axi_pkg::axi_data_t;
+
+  localparam AXI_ASYNC_FIFO_DEPTH = 4; // Must be a power of 2
 
   typedef enum logic [3:0] {
     TEST_LOGIC_RESET  = 'd0,
@@ -23,16 +28,15 @@ package jtag_pkg;
   } tap_ctrl_fsm_t;
 
   typedef enum logic [3:0] {
-    EXTEST         = 'b0000, // TODO: Implement BSD
-    SAMPLE_PRELOAD = 'b1010, // TODO: Implement BSD
-    IC_RESET       = 'b1100,
-    IDCODE         = 'b1110,
-    BYPASS         = 'b1111,
-    ADDR_AXI_REG   = 'b0001,
-    DATA_W_AXI_REG = 'b0010,
-    DATA_R_AXI_REG = 'b0011,
-    CTRL_AXI_REG   = 'b0100,
-    STATUS_AXI_REG = 'b0101
+    EXTEST          = 'b0000, // TODO: Implement BSD
+    SAMPLE_PRELOAD  = 'b1010, // TODO: Implement BSD
+    IC_RESET        = 'b1100,
+    IDCODE          = 'b1110,
+    BYPASS          = 'b1111,
+    ADDR_AXI_REG    = 'b0001,
+    DATA_W_AXI_REG  = 'b0010,
+    CTRL_AXI_REG    = 'b0100,
+    STATUS_AXI_REG  = 'b0101
   } ir_decoding_t;
 
   // --------------------------
@@ -53,9 +57,14 @@ package jtag_pkg;
     AXI_WRITE = 'd1
   } axi_jtag_txn_t;
 
+  typedef logic [$clog2(AXI_ASYNC_FIFO_DEPTH)-1:0] axi_afifo_t;
+
   typedef struct packed {
-    logic          start;
-    axi_jtag_txn_t txn_type;
+    axi_data_t      data_read; // MSB
+    logic           start;
+    axi_jtag_txn_t  txn_type;
+    axi_afifo_t     free_slots;
+    axi_size_t      size; // LSB
   } s_axi_jtag_ctrl_t;
 
   typedef struct packed {
@@ -63,26 +72,16 @@ package jtag_pkg;
     axi_jtag_status_t status;
   } s_axi_jtag_mgmt_t;
 
-  localparam MGMT_WIDTH = $bits(s_axi_jtag_mgmt_t);
-  localparam ADDR_AXI_WIDTH = 32;
-  localparam DATA_AXI_WIDTH = 64;
-
   typedef union packed {
-    logic [(MGMT_WIDTH-1):0] flat;
-    s_axi_jtag_mgmt_t        st; 
+    logic [($bits(s_axi_jtag_mgmt_t)-1):0] flat;
+    s_axi_jtag_mgmt_t                      st; 
   } s_axi_jtag_mgmt_ut;
 
   typedef struct packed {
-    logic [(ADDR_AXI_WIDTH-1):0] addr;
-    logic [(DATA_AXI_WIDTH-1):0] data_write;
-    logic [(DATA_AXI_WIDTH-1):0] data_read;
-    s_axi_jtag_mgmt_ut           mgmt;
+    axi_addr_t          addr;
+    axi_data_t          data_write;
+    s_axi_jtag_mgmt_ut  mgmt;
   } s_axi_jtag_t;
-
-  localparam DEFAULT_FAULT_ISO = 4'b0001;
-  localparam MSB_IR_ENC = $bits(ir_decoding_t)-1;
-  localparam DR_MAX_WIDTH = ADDR_AXI_WIDTH > DATA_AXI_WIDTH ? ADDR_AXI_WIDTH :
-                                                              DATA_AXI_WIDTH;
 
   //typedef struct packed {
   //  logic tck;

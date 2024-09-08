@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 26.08.2024
+# Last Modified Date: 08.09.2024
 import os
 import glob
 from enum import Enum
@@ -21,11 +21,13 @@ class cfg:
     TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
     INC_DIR = os.path.join(TESTS_DIR, "../../rtl/include")
     RTL_DIR = os.path.join(TESTS_DIR, "../../rtl")
+    BA_DIR = os.path.join(TESTS_DIR, "../../rtl/bus_arch_sv_pkg")
 
     VERILOG_SOURCES = []  # The sequence below is important...
-    VERILOG_SOURCES = VERILOG_SOURCES + glob.glob(f"{RTL_DIR}/*.v", recursive=True)
+    VERILOG_SOURCES = VERILOG_SOURCES + glob.glob(f"{BA_DIR}/*.sv", recursive=True)
     VERILOG_SOURCES = VERILOG_SOURCES + glob.glob(f"{INC_DIR}/*.sv", recursive=True)
     VERILOG_SOURCES = VERILOG_SOURCES + glob.glob(f"{RTL_DIR}/*.sv", recursive=True)
+    VERILOG_SOURCES = VERILOG_SOURCES + glob.glob(f"{RTL_DIR}/*.v", recursive=True)
 
     EXTRA_ENV = {}
     EXTRA_ENV["COCOTB_HDL_TIMEPRECISION"] = os.getenv("TIMEPREC")

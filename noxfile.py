@@ -4,13 +4,14 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 08.10.2023
-# Last Modified Date: 06.09.2024
+# Last Modified Date: 08.09.2024
 
 import nox
 import os
 
 TOP_MODULE = "jtag_wrapper"
 SRC_DIR = "rtl"
+BUS_ARCH_DIR = "rtl/bus_arch_sv_pkg"
 INCLUDE_DIR = "rtl/include"
 SLANG_CMD = "slang"
 
@@ -31,7 +32,7 @@ def run(session):
 def sv_lint(session):
     slang_command = get_sv()
     slang_command.append("--lint-only")
-    session.log(f"Running: {' '.join(slang_command)}")
+    # session.log(f"Running: {' '.join(slang_command)}")
     session.run(*slang_command, external=True)
 
 
@@ -41,14 +42,14 @@ def sv_pre(session):
     slang_command.append("--preprocess")
     slang_command.append("--comments")
     slang_command += [">", "RM_ME_rtl_pp.sv"]
-    session.log(f"Running: {' '.join(slang_command)}")
+    # session.log(f"Running: {' '.join(slang_command)}")
     session.run("bash", "-c", " ".join(slang_command), external=True)
 
 
 @nox.session(reuse_venv=True)
 def sv_run(session):
     slang_command = get_sv()
-    session.log(f"Running: {' '.join(slang_command)}")
+    # session.log(f"Running: {' '.join(slang_command)}")
     session.run(*slang_command, external=True)
 
 
@@ -56,6 +57,11 @@ def get_sv():
     """Gather all SystemVerilog files and run slang with an include directory."""
     # Recursively find all .sv files in the SRC_DIR
     sv_files = []
+    for root, _, files in os.walk(BUS_ARCH_DIR):
+        for file in files:
+            if file.endswith(".sv"):
+                sv_files.append(os.path.join(root, file))
+
     for root, _, files in os.walk(SRC_DIR):
         for file in files:
             if file.endswith(".sv"):
@@ -72,7 +78,7 @@ def get_sv():
         "--top",
         TOP_MODULE,
         "-Weverything",
-    ] + sv_files
-    # ] + sv_files + ["--single-unit", "--libraries-inherit-macros"]
+    # ] + sv_files
+    ] + sv_files + ["--single-unit", "--libraries-inherit-macros"]
 
     return slang_command

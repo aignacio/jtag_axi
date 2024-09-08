@@ -7,6 +7,7 @@
  */
 module data_registers
   import jtag_pkg::*;
+  import amba_axi_pkg::*;
 #(
   parameter [31:0] IDCODE_VAL = 'hBADC0FFE, 
   parameter int IC_RST_WIDTH  = 4
@@ -24,6 +25,8 @@ module data_registers
   output  logic                      axi_status_rd, // Ack last status
   output  logic                      axi_ctrl // Dispatch a new txn when assert
 );
+  localparam DR_MAX_WIDTH = $bits(s_axi_jtag_ctrl_t);
+
   logic bypass_ff, next_bypass;
   logic bypass_n_ff;
 
@@ -121,35 +124,26 @@ module data_registers
       end
       ADDR_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr[(ADDR_AXI_WIDTH-1):0] = axi_ff.addr;
+          next_sr[(`AXI_ADDR_WIDTH-1):0] = axi_ff.addr;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[(ADDR_AXI_WIDTH-1):0] = {tdi,sr_ff[(ADDR_AXI_WIDTH-1):1]};
+          next_sr[(`AXI_ADDR_WIDTH-1):0] = {tdi,sr_ff[(`AXI_ADDR_WIDTH-1):1]};
           tdo = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
-          next_axi.addr = sr_ff[(ADDR_AXI_WIDTH-1):0];
-        end
-      end
-      DATA_R_AXI_REG: begin
-        if (tap_state == CAPTURE_DR) begin
-          next_sr[(DATA_AXI_WIDTH-1):0] = axi_ff.data_read;
-        end
-        else if (tap_state == SHIFT_DR) begin
-          next_sr[(DATA_AXI_WIDTH-1):0] = {tdi,sr_ff[(DATA_AXI_WIDTH-1):1]};
-          tdo = sr_n_ff[0];
+          next_axi.addr = sr_ff[(`AXI_ADDR_WIDTH-1):0];
         end
       end
       DATA_W_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr[(DATA_AXI_WIDTH-1):0] = axi_ff.data_write;
+          next_sr[(`AXI_DATA_WIDTH-1):0] = axi_ff.data_write;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[(DATA_AXI_WIDTH-1):0] = {tdi,sr_ff[(DATA_AXI_WIDTH-1):1]};
+          next_sr[(`AXI_DATA_WIDTH-1):0] = {tdi,sr_ff[(`AXI_DATA_WIDTH-1):1]};
           tdo = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
-          next_axi.data_write = sr_ff[(DATA_AXI_WIDTH-1):0];
+          next_axi.data_write = sr_ff[(`AXI_DATA_WIDTH-1):0];
         end
       end
       CTRL_AXI_REG: begin

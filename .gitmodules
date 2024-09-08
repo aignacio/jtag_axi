@@ -1,0 +1,3 @@
+[submodule "rtl/bus_arch_sv_pkg"]
+	path = rtl/bus_arch_sv_pkg
+	url = git@github.com:aignacio/bus_arch_sv_pkg.git

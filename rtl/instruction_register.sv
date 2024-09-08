@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 25.08.2024
- * Last Modified Date: 31.08.2024
+ * Last Modified Date: 08.09.2024
  */
 module instruction_register
   import jtag_pkg::*;
@@ -16,6 +16,9 @@ module instruction_register
   output  ir_decoding_t   ir_dec,
   output  logic           select_dr
 );
+  localparam MSB_IR_ENC = $bits(ir_decoding_t)-1;
+  localparam DEFAULT_FAULT_ISO = 4'b0001;
+
   ir_decoding_t sr_ff, next_sr;
   ir_decoding_t sr_n_ff;
   ir_decoding_t ir_ff, next_ir;
