@@ -31,7 +31,8 @@ package jtag_pkg;
     ADDR_AXI_REG   = 'b0001,
     DATA_W_AXI_REG = 'b0010,
     DATA_R_AXI_REG = 'b0011,
-    MGMT_AXI_REG   = 'b0100
+    CTRL_AXI_REG   = 'b0100,
+    STATUS_AXI_REG = 'b0101
   } ir_decoding_t;
 
   // --------------------------

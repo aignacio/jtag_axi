@@ -120,7 +120,8 @@ if cocotb.SIM_NAME:
             (InstJTAG.ADDR_AXI_REG, 32, False),
             (InstJTAG.DATA_W_AXI_REG, 64, False),
             (InstJTAG.DATA_R_AXI_REG, 64, True),
-            (InstJTAG.MGMT_AXI_REG, 5, False),
+            (InstJTAG.CTRL_AXI_REG, 2, False),
+            (InstJTAG.STATUS_AXI_REG, 3, True),
         ],
     )
     factory.generate_tests()

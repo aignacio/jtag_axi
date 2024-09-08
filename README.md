@@ -15,6 +15,7 @@ jectives are:
 2. Program memories in SoCs to act as a bootloader interface.
 
 The **instruction register** length is 4-bits long and the data registers available are defined in the table below:
+
 |    **Name**    | **Encoding (4 bits)** | **Access (RW/RO)** |      **Bit length**      |                       **Description**                       |
 |:--------------:|:---------------------:|:------------------:|:------------------------:|:-----------------------------------------------------------:|
 |     EXTEST     |          0000         |         TBD        |            TBD           |                             TBD                             |
@@ -25,8 +26,8 @@ The **instruction register** length is 4-bits long and the data registers availa
 |  ADDR_AXI_REG  |          0001         |         RW         | ADDR_AXI_WIDTH - Def. 32 |         Indicates the AXI address of the transaction        |
 |   DATA_W_REG   |          0010         |         RW         | DATA_AXI_WIDTH - Def. 64 |             Indicates the AXI data to be written            |
 |   DATA_R_REG   |          0011         |         RO         | DATA_AXI_WIDTH - Def. 64 |                 Indicates the AXI read data                 |
-|  MGMT_AXI_REG  |          0100         |         RW         |             5            |               Manages AXI master I/F dispatch               |
-
+|  CTRL_AXI_REG  |          0100         |         RW         |             2            |               Controls AXI master I/F dispatch              |
+| STATUS_AXI_REG |          0101         |         RO         |             3            |           Return the status of the AXI transaction          |
 
 ## Flow sequence
 

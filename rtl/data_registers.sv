@@ -17,9 +17,12 @@ module data_registers
   output  logic                      tdo,
   input   tap_ctrl_fsm_t             tap_state,
   input   ir_decoding_t              ir_dec,
+  // Data Register output
   output  logic [(IC_RST_WIDTH-1):0] ic_rst,
+  // To AXI I/F 
   output  s_axi_jtag_t               axi_info,
-  output  logic                      axi_update
+  output  logic                      axi_status_rd, // Ack last status
+  output  logic                      axi_ctrl // Dispatch a new txn when assert
 );
   logic bypass_ff, next_bypass;
   logic bypass_n_ff;
@@ -33,18 +36,21 @@ module data_registers
 
   s_axi_jtag_t axi_ff, next_axi;
 
-  logic axi_update_ff, next_axi_update;
+  logic axi_status_rd_ff, next_axi_status_rd;
+  logic axi_ctrl_ff, next_axi_ctrl;
 
   always_comb begin
     ic_rst = ic_rst_ff;
     axi_info = axi_ff;
-    axi_update = axi_update_ff;
+    axi_status_rd = axi_status_rd_ff;
+    axi_ctrl = axi_ctrl_ff;
   end
 
   always_comb begin
     tdo = 1'b0;
 
-    next_axi_update = 1'b0;
+    next_axi_status_rd = 1'b0;
+    next_axi_ctrl = 1'b0;
     next_bypass = bypass_ff;
     next_idcode = idcode_ff;
     next_ic_rst = ic_rst_ff;
@@ -146,17 +152,29 @@ module data_registers
           next_axi.data_write = sr_ff[(DATA_AXI_WIDTH-1):0];
         end
       end
-      MGMT_AXI_REG: begin
+      CTRL_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr[(MGMT_WIDTH-1):0] = axi_ff.mgmt.flat;
+          next_sr[($bits(s_axi_jtag_ctrl_t)-1):0] = axi_ff.mgmt.st.control;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[(MGMT_WIDTH-1):0] = {tdi,sr_ff[(MGMT_WIDTH-1):1]};
+          next_sr[($bits(s_axi_jtag_ctrl_t)-1):0] = {tdi,sr_ff[($bits(s_axi_jtag_ctrl_t)-1):1]};
           tdo = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
-          next_axi.mgmt = s_axi_jtag_mgmt_t'(sr_ff);
-          next_axi_update = 1'b1;
+          next_axi.mgmt.st.control = s_axi_jtag_ctrl_t'(sr_ff);
+          next_axi_ctrl = 1'b1;
+        end
+      end
+      STATUS_AXI_REG: begin
+        if (tap_state == CAPTURE_DR) begin
+          next_sr[($bits(axi_jtag_status_t)-1):0] = axi_ff.mgmt.st.status;
+        end
+        else if (tap_state == SHIFT_DR) begin
+          next_sr[($bits(axi_jtag_status_t)-1):0] = {tdi,sr_ff[($bits(axi_jtag_status_t)-1):1]};
+          tdo = sr_n_ff[0];
+        end
+        else if (tap_state == UPDATE_DR) begin
+          next_axi_status_rd = 1'b1;
         end
       end
     endcase
@@ -165,20 +183,22 @@ module data_registers
 
   always_ff @ (posedge tck or negedge trstn) begin
     if (trstn == 1'b0) begin
-      bypass_ff     <= 1'b0;
-      idcode_ff     <= '0;
-      sr_ff         <= '0;
-      axi_ff        <= s_axi_jtag_t'(0);
-      ic_rst_ff     <= '0;
-      axi_update_ff <= 1'b0;
+      bypass_ff        <= 1'b0;
+      idcode_ff        <= '0;
+      sr_ff            <= '0;
+      axi_ff           <= s_axi_jtag_t'(0);
+      ic_rst_ff        <= '0;
+      axi_status_rd_ff <= 1'b0;
+      axi_ctrl_ff      <= 1'b0;
     end
     else begin
-      bypass_ff     <= next_bypass;
-      idcode_ff     <= next_idcode;
-      sr_ff         <= next_sr;
-      axi_ff        <= next_axi;
-      ic_rst_ff     <= next_ic_rst;
-      axi_update_ff <= next_axi_update;
+      bypass_ff        <= next_bypass;
+      idcode_ff        <= next_idcode;
+      sr_ff            <= next_sr;
+      axi_ff           <= next_axi;
+      ic_rst_ff        <= next_ic_rst;
+      axi_status_rd_ff <= next_axi_status_rd;
+      axi_ctrl_ff      <= next_axi_ctrl;
     end
   end
 

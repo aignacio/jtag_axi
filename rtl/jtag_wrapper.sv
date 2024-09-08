@@ -51,15 +51,16 @@ module jtag_wrapper
     .IDCODE_VAL   (IDCODE_VAL),
     .IC_RST_WIDTH (IC_RST_WIDTH)
   ) u_data_registers (
-    .trstn      (trstn),
-    .tck        (tck),
-    .tdi        (tdi),
-    .tdo        (tdo_dr),
-    .tap_state  (tap_state),
-    .ir_dec     (ir_dec),
+    .trstn          (trstn),
+    .tck            (tck),
+    .tdi            (tdi),
+    .tdo            (tdo_dr),
+    .tap_state      (tap_state),
+    .ir_dec         (ir_dec),
     // Data Registers output
-    .ic_rst     (),
-    .axi_info   (axi_info),
-    .axi_update ()
+    .ic_rst         (),
+    .axi_info       (axi_info),
+    .axi_status_rd  (),
+    .axi_ctrl       ()
   );
 endmodule

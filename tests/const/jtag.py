@@ -11,7 +11,8 @@ class InstJTAG(Enum):
     ADDR_AXI_REG   = "0b0001"
     DATA_W_AXI_REG = "0b0010"
     DATA_R_AXI_REG = "0b0011"
-    MGMT_AXI_REG   = "0b0100"
+    CTRL_AXI_REG   = "0b0100"
+    STATUS_AXI_REG = "0b0101"
 
 # JTAG TAP Controller States
 class JTAGState(Enum):
