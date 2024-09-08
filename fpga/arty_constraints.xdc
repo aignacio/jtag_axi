@@ -12,7 +12,7 @@ set_property -dict { PACKAGE_PIN B18 IOSTANDARD LVCMOS33 } [get_ports { tck }]; 
 set_property -dict { PACKAGE_PIN A18 IOSTANDARD LVCMOS33 } [get_ports { tdo }]; #Sch=ja[9]
 set_property -dict { PACKAGE_PIN K16 IOSTANDARD LVCMOS33 } [get_ports { tdi }]; #Sch=ja[10]
 
-create_clock -add -name sys_clk_pin -period 1000.00 -waveform {0 500} [get_ports { tck }];
+create_clock -add -name sys_clk_pin -period 100.00 -waveform {0 50} [get_ports { tck }];
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets tck]
 
 # Downgrade Errors to Warnings on unconstrainted IOs - Don't care for now:w

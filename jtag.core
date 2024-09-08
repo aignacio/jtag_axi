@@ -5,6 +5,7 @@ description: JTAG to AXI
 filesets:
   jtag_wrapper:
     files:
+      - rtl/bus_arch_sv_pkg/amba_axi_pkg.sv
       - rtl/include/jtag_pkg.sv
       - rtl/data_registers.sv
       - rtl/instruction_register.sv
