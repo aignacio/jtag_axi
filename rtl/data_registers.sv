@@ -7,7 +7,6 @@
  */
 module data_registers
   import jtag_pkg::*;
-  import amba_axi_pkg::*;
 #(
   parameter [31:0] IDCODE_VAL = 'hBADC0FFE, 
   parameter int IC_RST_WIDTH  = 4
