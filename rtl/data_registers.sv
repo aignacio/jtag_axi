@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 28.08.2024
- * Last Modified Date: 08.09.2024
+ * Last Modified Date: 09.09.2024
  */
 module data_registers
   import jtag_pkg::*;
@@ -11,20 +11,23 @@ module data_registers
   parameter [31:0] IDCODE_VAL = 'hBADC0FFE, 
   parameter int IC_RST_WIDTH  = 4
 )(
-  input                              trstn,
-  input                              tck,
-  input                              tdi,
-  output  logic                      tdo,
-  input   tap_ctrl_fsm_t             tap_state,
-  input   ir_decoding_t              ir_dec,
+  input                               trstn,
+  input                               tck,
+  input                               tdi,
+  output  logic                       tdo,
+  input   tap_ctrl_fsm_t              tap_state,
+  input   ir_decoding_t               ir_dec,
   // Data Register output
-  output  logic [(IC_RST_WIDTH-1):0] ic_rst,
+  output  logic [(IC_RST_WIDTH-1):0]  ic_rst,
   // To AXI I/F 
-  output  s_axi_jtag_t               axi_info,
-  output  logic                      axi_status_rd, // Ack last status
-  output  logic                      axi_ctrl // Dispatch a new txn when assert
+  input   s_axi_jtag_status_t         jtag_status_i, 
+  output  logic                       axi_status_rd_o, // Ack last status
+  input   axi_afifo_t                 afifo_slots_i,
+  output  s_axi_jtag_info_t           axi_info_o,
+  output  logic                       axi_req_new_o // Dispatch a new txn when assert
 );
-  localparam DR_MAX_WIDTH = $bits(s_axi_jtag_ctrl_t);
+  localparam DR_MAX_WIDTH = $bits(s_axi_jtag_status_t); // Needs to be the larg 
+                                                        // est DR...
 
   logic bypass_ff, next_bypass;
   logic bypass_n_ff;
@@ -36,27 +39,27 @@ module data_registers
   logic [(DR_MAX_WIDTH-1):0] sr_ff, next_sr;
   logic [(DR_MAX_WIDTH-1):0] sr_n_ff;
 
-  s_axi_jtag_t axi_ff, next_axi;
+  s_axi_jtag_info_t axi_info_ff, next_axi_info;
 
   logic axi_status_rd_ff, next_axi_status_rd;
-  logic axi_ctrl_ff, next_axi_ctrl;
+  logic axi_req_ff, next_axi_req;
 
   always_comb begin
     ic_rst = ic_rst_ff;
-    axi_info = axi_ff;
-    axi_status_rd = axi_status_rd_ff;
-    axi_ctrl = axi_ctrl_ff;
+    axi_info_o = axi_info_ff;
+    axi_status_rd_o = axi_status_rd_ff;
+    axi_req_new_o = axi_req_ff;
   end
 
   always_comb begin
     tdo = 1'b0;
 
     next_axi_status_rd = 1'b0;
-    next_axi_ctrl = 1'b0;
+    next_axi_req = 1'b0;
     next_bypass = bypass_ff;
     next_idcode = idcode_ff;
     next_ic_rst = ic_rst_ff;
-    next_axi = axi_ff;
+    next_axi_info = axi_info_ff;
     next_sr = sr_ff;
 
     /* verilator lint_off CASEINCOMPLETE */
@@ -123,44 +126,44 @@ module data_registers
       end
       ADDR_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr[(`AXI_ADDR_WIDTH-1):0] = axi_ff.addr;
+          next_sr[(`AXI_ADDR_WIDTH-1):0] = axi_info_ff.addr;
         end
         else if (tap_state == SHIFT_DR) begin
           next_sr[(`AXI_ADDR_WIDTH-1):0] = {tdi,sr_ff[(`AXI_ADDR_WIDTH-1):1]};
           tdo = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
-          next_axi.addr = sr_ff[(`AXI_ADDR_WIDTH-1):0];
+          next_axi_info.addr = sr_ff[(`AXI_ADDR_WIDTH-1):0];
         end
       end
       DATA_W_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr[(`AXI_DATA_WIDTH-1):0] = axi_ff.data_write;
+          next_sr[(`AXI_DATA_WIDTH-1):0] = axi_info_ff.data_wr;
         end
         else if (tap_state == SHIFT_DR) begin
           next_sr[(`AXI_DATA_WIDTH-1):0] = {tdi,sr_ff[(`AXI_DATA_WIDTH-1):1]};
           tdo = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
-          next_axi.data_write = sr_ff[(`AXI_DATA_WIDTH-1):0];
+          next_axi_info.data_wr = sr_ff[(`AXI_DATA_WIDTH-1):0];
         end
       end
       CTRL_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr[($bits(s_axi_jtag_ctrl_t)-1):0] = axi_ff.mgmt.st.control;
+          next_sr[($bits(s_axi_jtag_ctrl_t)-1):0] = axi_info_ff.ctrl;
         end
         else if (tap_state == SHIFT_DR) begin
           next_sr[($bits(s_axi_jtag_ctrl_t)-1):0] = {tdi,sr_ff[($bits(s_axi_jtag_ctrl_t)-1):1]};
           tdo = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
-          next_axi.mgmt.st.control = s_axi_jtag_ctrl_t'(sr_ff);
-          next_axi_ctrl = 1'b1;
+          next_axi_info.ctrl = s_axi_jtag_ctrl_t'(sr_ff);
+          next_axi_req = 1'b1;
         end
       end
       STATUS_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr[($bits(axi_jtag_status_t)-1):0] = axi_ff.mgmt.st.status;
+          next_sr[($bits(s_axi_jtag_status_t)-1):0] = jtag_status_i;
         end
         else if (tap_state == SHIFT_DR) begin
           next_sr[($bits(axi_jtag_status_t)-1):0] = {tdi,sr_ff[($bits(axi_jtag_status_t)-1):1]};
@@ -179,19 +182,19 @@ module data_registers
       bypass_ff        <= 1'b0;
       idcode_ff        <= '0;
       sr_ff            <= '0;
-      axi_ff           <= s_axi_jtag_t'(0);
+      axi_info_ff      <= s_axi_jtag_info_t'(0);
       ic_rst_ff        <= '0;
       axi_status_rd_ff <= 1'b0;
-      axi_ctrl_ff      <= 1'b0;
+      axi_req_ff       <= 1'b0;
     end
     else begin
       bypass_ff        <= next_bypass;
       idcode_ff        <= next_idcode;
       sr_ff            <= next_sr;
-      axi_ff           <= next_axi;
+      axi_info_ff      <= next_axi_info;
       ic_rst_ff        <= next_ic_rst;
       axi_status_rd_ff <= next_axi_status_rd;
-      axi_ctrl_ff      <= next_axi_ctrl;
+      axi_req_ff       <= next_axi_req;
     end
   end
 

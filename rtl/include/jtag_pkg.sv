@@ -60,39 +60,22 @@ package jtag_pkg;
   typedef logic [$clog2(AXI_ASYNC_FIFO_DEPTH)-1:0] axi_afifo_t;
 
   typedef struct packed {
-    axi_data_t      data_read; // MSB
+    axi_data_t        data_rd;
+    axi_jtag_status_t status;
+  } s_axi_jtag_status_t;
+
+  typedef struct packed {
     logic           start;
     axi_jtag_txn_t  txn_type;
     axi_afifo_t     free_slots;
-    axi_size_t      size; // LSB
+    axi_size_t      size;
   } s_axi_jtag_ctrl_t;
 
   typedef struct packed {
-    s_axi_jtag_ctrl_t control;
-    axi_jtag_status_t status;
-  } s_axi_jtag_mgmt_t;
-
-  typedef union packed {
-    logic [($bits(s_axi_jtag_mgmt_t)-1):0] flat;
-    s_axi_jtag_mgmt_t                      st; 
-  } s_axi_jtag_mgmt_ut;
-
-  typedef struct packed {
-    axi_addr_t          addr;
-    axi_data_t          data_write;
-    s_axi_jtag_mgmt_ut  mgmt;
-  } s_axi_jtag_t;
-
-  //typedef struct packed {
-  //  logic tck;
-  //  logic tms;
-  //  logic tdi;
-  //  logic trst;
-  //} s_jtag_mosi_t;
-
-  //typedef struct packed {
-  //  logic tdo;
-  //} s_jtag_miso_t;
+    axi_addr_t        addr;
+    axi_data_t        data_wr;
+    s_axi_jtag_ctrl_t ctrl;
+  } s_axi_jtag_info_t;
 
 endpackage
 

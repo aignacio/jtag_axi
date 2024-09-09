@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 25.08.2024
- * Last Modified Date: 08.09.2024
+ * Last Modified Date: 09.09.2024
  */
 module jtag_wrapper
   import jtag_pkg::*;
@@ -19,12 +19,12 @@ module jtag_wrapper
   output logic addr,
   output logic data
 );
-  tap_ctrl_fsm_t  tap_state;
-  ir_decoding_t   ir_dec;
-  logic           select_dr;
-  logic           tdo_ir;
-  logic           tdo_dr;
-  s_axi_jtag_t    axi_info;
+  tap_ctrl_fsm_t    tap_state;
+  ir_decoding_t     ir_dec;
+  logic             select_dr;
+  logic             tdo_ir;
+  logic             tdo_dr;
+  s_axi_jtag_info_t axi_info;
 
   tap_ctrl_fsm u_tap_ctrl_fsm (
     .trstn      (trstn),
@@ -45,22 +45,24 @@ module jtag_wrapper
 
   assign tdo  = (select_dr == 1'b0) ? tdo_ir : tdo_dr;
   assign addr = axi_info.addr[0];
-  assign data = axi_info.data_write[0];
+  assign data = axi_info.data_wr[0];
 
   data_registers #(
     .IDCODE_VAL   (IDCODE_VAL),
     .IC_RST_WIDTH (IC_RST_WIDTH)
   ) u_data_registers (
-    .trstn          (trstn),
-    .tck            (tck),
-    .tdi            (tdi),
-    .tdo            (tdo_dr),
-    .tap_state      (tap_state),
-    .ir_dec         (ir_dec),
+    .trstn            (trstn),
+    .tck              (tck),
+    .tdi              (tdi),
+    .tdo              (tdo_dr),
+    .tap_state        (tap_state),
+    .ir_dec           (ir_dec),
     // Data Registers output
-    .ic_rst         (),
-    .axi_info       (axi_info),
-    .axi_status_rd  (),
-    .axi_ctrl       ()
+    .ic_rst           (),
+    .jtag_status_i    ('0),
+    .axi_status_rd_o  (),
+    .afifo_slots_i    ('0),
+    .axi_info_o       (axi_info),
+    .axi_req_new_o    ()
   );
 endmodule

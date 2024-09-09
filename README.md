@@ -34,23 +34,31 @@ The registers `CTRL_AXI_REG` and `STATUS_AXI_REG` follow a specific format and t
 
 ### STATUS_AXI_REG
 
-| **Value** | **Status meaning** |                                                                  **Description**                                                                  |
-|:------------------:|:------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
-|          0         |      JTAG_IDLE     |                            That is the default state of the design when no <br>transactions (txn) have been dispatched                            |
-|          1         |    JTAG_RUNNING    | When a transaction (txn) is started, the design will change to this state. <br>It should stay there until a response is received or it times out. |
-|          2         |    JTAG_TIMEOUT    |                                                          Indicates a transaction timeout                                                          |
-|          3         |    JTAG_AXI_OKAY   |                                                     Indicates a transaction response: AXI OKAY                                                    |
-|          4         |   JTAG_AXI_EXOKAY  |                                                    Indicates a transaction response: AXI EXOKAY                                                   |
-|          5         |   JTAG_AXI_SLVERR  |                                                    Indicates a transaction response: AXI SLVERR                                                   |
-|          6         |   JTAG_AXI_DECER   |                                                    Indicates a transaction response: AXI DECER                                                    |
+| **STATUS_AXI_REG** |                                 **AXI Data Read<br>(32 bits)**                                 |       **Status<br>(3 bits)**       |
+|:------------------:|:----------------------------------------------------------------------------------------------:|:----------------------------------:|
+|      Bit order     |                                               MSB                                              |                 LSB                |
+| **Access (RW/RO)** |                                               RO                                               |                 RO                 |
+|   **Description**  | When read transaction is performed,<br>its data will be written here<br>in order as dispatched | Current status of last transaction |
+
+#### Status decoding:
+
+| **Status code** | **Status alias** |                                                                  **Description**                                                                  |
+|:---------------:|:----------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
+|        0        |     JTAG_IDLE    |                            That is the default state of the design when no <br>transactions (txn) have been dispatched                            |
+|        1        |   JTAG_RUNNING   | When a transaction (txn) is started, the design will change to this state. <br>It should stay there until a response is received or it times out. |
+|        2        |   JTAG_TIMEOUT   |                                                          Indicates a transaction timeout                                                          |
+|        3        |   JTAG_AXI_OKAY  |                                                     Indicates a transaction response: AXI OKAY                                                    |
+|        4        |  JTAG_AXI_EXOKAY |                                                    Indicates a transaction response: AXI EXOKAY                                                   |
+|        5        |  JTAG_AXI_SLVERR |                                                    Indicates a transaction response: AXI SLVERR                                                   |
+|        6        |  JTAG_AXI_DECER  |                                                    Indicates a transaction response: AXI DECER                                                    |
 
 ### CTRL_AXI_REG
 
-|    CTRL_AXI_REG    |                    **AXI Data Read <br>(32 bits)**                   |               **Start<br>(1 bit)**               | **Txn type<br>(1 bit)** |               **Free Slots<br>(2 bits)**              |               **Size AXI txn<br>(3 bits)**              |
-|:------------------:|:--------------------------------------------------------------------:|:------------------------------------------------:|:-----------------------:|:-----------------------------------------------------:|:-------------------------------------------------------:|
-|      Bit order     |                                  MSB                                 |                        ...                       |           ...           |                          ...                          |                           LSB                           |
-| **Access (RW/RO)** |                                  RO                                  |           RW<br>(writes not preserved)           |            RW           |                           RO                          |                            RW                           |
-|   **Description**  | When read transaction is performed,<br>its data will be written here | Once written 1, dispatches<br>an AXI transaction |   1 - Write, 0 - Read   | Number of slots available<br>in the Asynchronous FIFO | Size of the AXI transaction<br>following AXIv4 encoding |
+|    CTRL_AXI_REG    |               **Start<br>(1 bit)**               | **Txn type<br>(1 bit)** |               **Free Slots<br>(2 bits)**              |               **Size AXI txn<br>(3 bits)**              |
+|:------------------:|:------------------------------------------------:|:-----------------------:|:-----------------------------------------------------:|:-------------------------------------------------------:|
+|      Bit order     |                        MSB                       |           ...           |                          ...                          |                           LSB                           |
+| **Access (RW/RO)** |           RW<br>(writes not preserved)           |            RW           |                           RO                          |                            RW                           |
+|   **Description**  | Once written 1, dispatches<br>an AXI transaction |   1 - Write, 0 - Read   | Number of slots available<br>in the Asynchronous FIFO | Size of the AXI transaction<br>following AXIv4 encoding |
 
 ## AXI Write - Flow sequence
 
@@ -81,11 +89,11 @@ AXI Master I/F ->> JTAG I/F: Txn response written into Async. FIFO
 
 JTAG Debug Adapter (PC) --> JTAG I/F: Monitor txn status
 JTAG Debug Adapter (PC) ->> JTAG I/F: Shift-IR: STATUS_AXI_REG
-Note right of JTAG I/F: Whenever Capture-DR is selected <br/> with IR set to STATUS_AXI_REG <br/> the latest status will be updated <br/> into STATUS_AXI_REG shift register
-Note left of JTAG Debug Adapter (PC): If txn_status != JTAG_IDLE/RUNNING <br/> txn has finished
+Note right of JTAG I/F: Whenever Update-DR is selected <br/> with IR set to STATUS_AXI_REG <br/> the latest status will be updated <br/> into STATUS_AXI_REG shift register
+Note left of JTAG Debug Adapter (PC): If txn_status != JTAG_RUNNING <br/> txn has finished
 JTAG I/F ->> JTAG Debug Adapter (PC): Shift-DR: Get STATUS_AXI_REG
 
-Note left of JTAG Debug Adapter (PC): If txn_status == JTAG_IDLE/RUNNING <br/> move to CAPTURE_DR and ShiftD-DR <br/> this will update the STATUS_AXI_REG
+Note left of JTAG Debug Adapter (PC): If txn_status == RUNNING <br/> move to Update-DR and then back to Shift-DR <br/> this will update the STATUS_AXI_REG
 ```
 
 ## AXI Read - Flow sequence
@@ -113,11 +121,11 @@ AXI Master I/F ->> JTAG I/F: Txn response written into Async. FIFO
 
 JTAG Debug Adapter (PC) --> JTAG I/F: Monitor txn status
 JTAG Debug Adapter (PC) ->> JTAG I/F: Shift-IR: STATUS_AXI_REG
-Note right of JTAG I/F: Whenever Capture-DR is selected <br/> with IR set to STATUS_AXI_REG <br/> the latest status will be updated <br/> into STATUS_AXI_REG shift register
-Note left of JTAG Debug Adapter (PC): If txn_status != JTAG_IDLE/RUNNING <br/> txn has finished
+Note right of JTAG I/F: Whenever Update-DR is selected <br/> with IR set to STATUS_AXI_REG <br/> the latest status will be updated <br/> into STATUS_AXI_REG shift register
+Note left of JTAG Debug Adapter (PC): If txn_status != RUNNING <br/> txn has finished
 JTAG I/F ->> JTAG Debug Adapter (PC): Shift-DR: Get STATUS_AXI_REG
 
-Note left of JTAG Debug Adapter (PC): If txn_status == JTAG_IDLE/RUNNING <br/> move to CAPTURE_DR and ShiftD-DR <br/> this will update the STATUS_AXI_REG
+Note left of JTAG Debug Adapter (PC): If txn_status == RUNNING <br/> move to Update-DR and then back to Shift-DR <br/> this will update the STATUS_AXI_REG
 ```
 
 ## 
