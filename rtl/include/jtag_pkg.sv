@@ -57,7 +57,7 @@ package jtag_pkg;
     AXI_WRITE = 'd1
   } axi_jtag_txn_t;
 
-  typedef logic [$clog2(AXI_ASYNC_FIFO_DEPTH)-1:0] axi_afifo_t;
+  typedef logic [$clog2(AXI_ASYNC_FIFO_DEPTH):0] axi_afifo_t;
 
   typedef struct packed {
     axi_data_t        data_rd;
@@ -67,7 +67,7 @@ package jtag_pkg;
   typedef struct packed {
     logic           start;
     axi_jtag_txn_t  txn_type;
-    axi_afifo_t     free_slots;
+    axi_afifo_t     fifo_ocup;
     axi_size_t      size;
   } s_axi_jtag_ctrl_t;
 
@@ -76,6 +76,11 @@ package jtag_pkg;
     axi_data_t        data_wr;
     s_axi_jtag_ctrl_t ctrl;
   } s_axi_jtag_info_t;
+
+  `define ERROR_IF(cond,  msg) \
+        generate if (cond) \
+          $error (msg); \
+        endgenerate
 
 endpackage
 

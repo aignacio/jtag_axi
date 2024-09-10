@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 08.10.2023
-# Last Modified Date: 08.09.2024
+# Last Modified Date: 09.09.2024
 
 import nox
 import os
@@ -61,7 +61,10 @@ def get_sv():
         for file in files:
             if file.endswith(".sv"):
                 sv_files.append(os.path.join(root, file))
-
+    for root, _, files in os.walk(INCLUDE_DIR):
+        for file in files:
+            if file.endswith(".sv"):
+                sv_files.append(os.path.join(root, file))
     for root, _, files in os.walk(SRC_DIR):
         for file in files:
             if file.endswith(".sv"):

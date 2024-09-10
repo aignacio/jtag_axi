@@ -3,13 +3,13 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 28.08.2024
- * Last Modified Date: 09.09.2024
+ * Last Modified Date: 10.09.2024
  */
 module data_registers
   import jtag_pkg::*;
 #(
-  parameter [31:0] IDCODE_VAL = 'hBADC0FFE, 
-  parameter int IC_RST_WIDTH  = 4
+  parameter [31:0]  IDCODE_VAL    = 'hBADC0FFE, 
+  parameter int     IC_RST_WIDTH  = 4
 )(
   input                               trstn,
   input                               tck,
@@ -60,6 +60,7 @@ module data_registers
     next_idcode = idcode_ff;
     next_ic_rst = ic_rst_ff;
     next_axi_info = axi_info_ff;
+    next_axi_info.ctrl.fifo_ocup = afifo_slots_i;
     next_sr = sr_ff;
 
     /* verilator lint_off CASEINCOMPLETE */
@@ -158,7 +159,8 @@ module data_registers
         end
         else if (tap_state == UPDATE_DR) begin
           next_axi_info.ctrl = s_axi_jtag_ctrl_t'(sr_ff);
-          next_axi_req = 1'b1;
+          next_axi_req = next_axi_info.ctrl.start;
+          //next_axi_info.ctrl.start = 1'b0;
         end
       end
       STATUS_AXI_REG: begin
@@ -216,9 +218,7 @@ module data_registers
     end
   end
 
-  initial begin
-    if (IC_RST_WIDTH > DR_MAX_WIDTH) begin
-      $error("IC_RST_WIDTH needs to be <= DR_MAX_WIDTH");
-    end
-  end
+  `ERROR_IF(IC_RST_WIDTH>DR_MAX_WIDTH, "Illegal values for parameters \
+                                        IC_RST_WIDTH and DR_MAX_WIDTH")
+
 endmodule

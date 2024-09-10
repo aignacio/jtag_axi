@@ -3,21 +3,26 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 25.08.2024
- * Last Modified Date: 09.09.2024
+ * Last Modified Date: 10.09.2024
  */
 module jtag_wrapper
   import jtag_pkg::*;
 #(
-  parameter [31:0] IDCODE_VAL = 'hBADC0FFE,
-  parameter int IC_RST_WIDTH  = 4
+  parameter [31:0]  IDCODE_VAL    = 'hBADC0FFE,
+  parameter int     IC_RST_WIDTH  = 4
 )(
-  input        trstn,
-  input        tck,
-  input        tms,
-  input        tdi,
-  output       tdo,
-  output logic addr,
-  output logic data
+  input                               trstn,
+  input                               tck,
+  input                               tms,
+  input                               tdi,
+  output                              tdo,
+  // To AXI I/F
+  output  logic [(IC_RST_WIDTH-1):0]  ic_rst,
+  input   s_axi_jtag_status_t         jtag_status_i,
+  output  logic                       axi_status_rd_o, // Ack last status
+  input   axi_afifo_t                 afifo_slots_i,
+  output  s_axi_jtag_info_t           axi_info_o,
+  output  logic                       axi_req_new_o // Dispatch a new txn when assert
 );
   tap_ctrl_fsm_t    tap_state;
   ir_decoding_t     ir_dec;
@@ -44,8 +49,6 @@ module jtag_wrapper
   );
 
   assign tdo  = (select_dr == 1'b0) ? tdo_ir : tdo_dr;
-  assign addr = axi_info.addr[0];
-  assign data = axi_info.data_wr[0];
 
   data_registers #(
     .IDCODE_VAL   (IDCODE_VAL),
@@ -58,11 +61,11 @@ module jtag_wrapper
     .tap_state        (tap_state),
     .ir_dec           (ir_dec),
     // Data Registers output
-    .ic_rst           (),
-    .jtag_status_i    ('0),
-    .axi_status_rd_o  (),
-    .afifo_slots_i    ('0),
-    .axi_info_o       (axi_info),
-    .axi_req_new_o    ()
+    .ic_rst           (ic_rst),
+    .jtag_status_i    (jtag_status_i),
+    .axi_status_rd_o  (axi_status_rd_o),
+    .afifo_slots_i    (afifo_slots_i),
+    .axi_info_o       (axi_info_o),
+    .axi_req_new_o    (axi_req_new_o)
   );
 endmodule
