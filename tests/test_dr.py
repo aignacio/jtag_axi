@@ -21,6 +21,7 @@ from cocotb.triggers import RisingEdge
 from cocotb.regression import TestFactory
 from cocotb.result import TestFailure
 from cocotb.runner import get_runner
+from enum import Enum
 
 
 def gen_bin_list(length):
@@ -37,28 +38,29 @@ def bin_list_to_num(binary_list):
     return int(binary_string, 2)
 
 
-class JTAGDataRegister:
-    ir_ins: InstJTAG.BYPASS
-    shift_length: 1
-    read_only: True
+class AccessMode(Enum):
+    RO = 1
+    RW = 2
 
 
 class JTAGDataRegister:
-    def __init__(self, dut, ir_ins, shift_length, read_only):
+    def __init__(self, dut, ir_ins, shift_length, ac, mask):
         self.dut = dut
         self.ir_ins = ir_ins
         self.shift_length = shift_length
-        self.read_only = read_only
+        self.access = ac
+        self.mask = mask
 
     def display(self):
         self.dut.log.info("------------------------------")
         self.dut.log.info(f"IR Instruction: {self.ir_ins}")
         self.dut.log.info(f"Shift Length: {self.shift_length}")
-        self.dut.log.info(f"Read Only: {self.read_only}")
+        self.dut.log.info(f"Access: {self.access}")
+        self.dut.log.info(f"Mask: {self.mask}")
 
 
 @cocotb.test()
-async def run_test(dut, jtag_dr=(InstJTAG.BYPASS, 1, True)):
+async def run_test(dut, jtag_dr=(InstJTAG.BYPASS, 1, AccessMode.RO, 0x1)):
     await reset_fsm(dut)
     args = (dut,) + jtag_dr
     dr = JTAGDataRegister(*args)
@@ -70,11 +72,13 @@ async def run_test(dut, jtag_dr=(InstJTAG.BYPASS, 1, True)):
     dut.log.info(f"\tin  = {hex(bin_list_to_num(shifted_in))}")
     dut.log.info(f"\tout = {hex(bin_list_to_num(shifted_out))}")
 
-    if dr.read_only == False:
+    if dr.access == AccessMode.RW:
         shifted_out = await move_to_shift_dr(dut, shifted_in)
         dut.log.info(f"-> [RW] Comparing value shifted second time:")
-        dut.log.info(f"\tin  = {hex(bin_list_to_num(shifted_in))}")
+        dut.log.info(f"\tin  = {hex(bin_list_to_num(shifted_in) & dr.mask)}")
         dut.log.info(f"\tout = {hex(bin_list_to_num(shifted_out))}")
+        shifted_in = bin_list_to_num(shifted_in) & dr.mask
+        shifted_out = bin_list_to_num(shifted_out)
         assert(shifted_in == shifted_out),"Shifted out != Shifted in"
 
 
@@ -114,13 +118,13 @@ if cocotb.SIM_NAME:
     factory.add_option(
         "jtag_dr",
         [
-            (InstJTAG.BYPASS, 1, True),
-            (InstJTAG.IC_RESET, 4, False),
-            (InstJTAG.IDCODE, 32, True),
-            (InstJTAG.ADDR_AXI_REG, 32, False),
-            (InstJTAG.DATA_W_AXI_REG, 32, False),
-            (InstJTAG.CTRL_AXI_REG, 8, False),
-            (InstJTAG.STATUS_AXI_REG, 37, True),
+            (InstJTAG.BYPASS, 1, AccessMode.RO, 0x1),
+            (InstJTAG.IC_RESET, 4, AccessMode.RW, 0xf),
+            (InstJTAG.IDCODE, 32, AccessMode.RO, 0xfff_ffff),
+            (InstJTAG.ADDR_AXI_REG, 32, AccessMode.RW, 0xffff_ffff),
+            (InstJTAG.DATA_W_AXI_REG, 32, AccessMode.RW, 0xffff_ffff),
+            (InstJTAG.CTRL_AXI_REG, 8, AccessMode.RW, 0xc7),
+            (InstJTAG.STATUS_AXI_REG, 37, AccessMode.RO, 0x1fffffffff),
         ],
     )
     factory.generate_tests()

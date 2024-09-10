@@ -1,3 +1,4 @@
+[![Regression Tests](https://github.com/aignacio/jtag_axi/actions/workflows/test.yaml/badge.svg)](https://github.com/aignacio/jtag_axi/actions/workflows/test.yaml) [![Lint-SV](https://github.com/aignacio/jtag_axi/actions/workflows/lint.yaml/badge.svg)](https://github.com/aignacio/jtag_axi/actions/workflows/lint.yaml)
 # JTAG to AXI master
 
 ## Table of Contents
@@ -54,7 +55,7 @@ The registers `CTRL_AXI_REG` and `STATUS_AXI_REG` follow a specific format and t
 
 ### CTRL_AXI_REG
 
-|    CTRL_AXI_REG    |               **Start<br>(1 bit)**               | **Txn type<br>(1 bit)** |               **Free Slots<br>(2 bits)**              |               **Size AXI txn<br>(3 bits)**              |
+|    CTRL_AXI_REG    |               **Start<br>(1 bit)**               | **Txn type<br>(1 bit)** |               **Free Slots<br>(3 bits)**              |               **Size AXI txn<br>(3 bits)**              |
 |:------------------:|:------------------------------------------------:|:-----------------------:|:-----------------------------------------------------:|:-------------------------------------------------------:|
 |      Bit order     |                        MSB                       |           ...           |                          ...                          |                           LSB                           |
 | **Access (RW/RO)** |           RW<br>(writes not preserved)           |            RW           |                           RO                          |                            RW                           |
@@ -141,25 +142,3 @@ jtag
 
 ## <a name="lic"></a> License
 `jtag_axi` is licensed under the permissive MIT license.Please refer to the [LICENSE](LICENSE) file for details.
-
-```mermaid
-sequenceDiagram
-Alice ->> Bob: Hello Bob, how are you?
-Bob-->>John: How about you John?
-Bob--x Alice: I am good thanks!
-Bob-x John: I am good thanks!
-Note right of John: Bob thinks a long<br/>long time, so long<br/>that the text does<br/>not fit on a row.
-
-Bob-->Alice: Checking with John...
-Alice->John: Yes... John, how are you?
-```
-
-And this will produce a flow chart:
-
-```mermaid
-graph LR
-A[Square Rect] -- Link text --> B((Circle))
-A --> C(Round Rect)
-B --> D{Rhombus}
-C --> D
-```
