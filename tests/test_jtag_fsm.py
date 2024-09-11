@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 07.09.2024
+# Last Modified Date: 11.09.2024
 import cocotb
 import os
 import logging
@@ -84,7 +84,7 @@ def test_jtag_fsm():
     runner.build(
         includes=cfg.INC_DIR,
         verilog_sources=cfg.VERILOG_SOURCES,
-        hdl_toplevel="tap_ctrl_fsm",
+        hdl_toplevel="jtag_axi_tap_ctrl_fsm",
         build_args=cfg.EXTRA_ARGS,
         clean=True,
         timescale=cfg.TIMESCALE,
@@ -93,5 +93,5 @@ def test_jtag_fsm():
     )
 
     runner.test(
-        hdl_toplevel="tap_ctrl_fsm", test_module=test_name, plusargs=cfg.PLUS_ARGS
+        hdl_toplevel="jtag_axi_tap_ctrl_fsm", test_module=test_name, plusargs=cfg.PLUS_ARGS
     )

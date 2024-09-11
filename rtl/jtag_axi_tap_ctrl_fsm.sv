@@ -1,12 +1,12 @@
 /**
- * File              : tap_ctrl_fsm.sv
+ * File              : jtag_axi_tap_ctrl_fsm.sv
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 04.11.2023
- * Last Modified Date: 04.11.2023
+ * Last Modified Date: 11.09.2024
  */
-module tap_ctrl_fsm 
-  import jtag_pkg::*;
+module jtag_axi_tap_ctrl_fsm 
+  import jtag_axi_pkg::*;
 (
   input                 trstn,
   input                 tck,

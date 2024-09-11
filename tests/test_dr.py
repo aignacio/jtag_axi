@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 10.09.2024
+# Last Modified Date: 11.09.2024
 import cocotb
 import os
 import logging
@@ -100,7 +100,7 @@ def test_dr():
     runner.build(
         includes=cfg.INC_DIR,
         verilog_sources=cfg.VERILOG_SOURCES,
-        hdl_toplevel="jtag_wrapper",
+        hdl_toplevel="jtag_axi_tap_wrapper",
         build_args=cfg.EXTRA_ARGS,
         clean=True,
         timescale=cfg.TIMESCALE,
@@ -109,7 +109,7 @@ def test_dr():
     )
 
     runner.test(
-        hdl_toplevel="jtag_wrapper", test_module=test_name, plusargs=cfg.PLUS_ARGS
+        hdl_toplevel="jtag_axi_tap_wrapper", test_module=test_name, plusargs=cfg.PLUS_ARGS
     )
 
 

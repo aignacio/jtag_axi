@@ -4,12 +4,12 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 08.10.2023
-# Last Modified Date: 09.09.2024
+# Last Modified Date: 11.09.2024
 
 import nox
 import os
 
-TOP_MODULE = "jtag_wrapper"
+TOP_MODULE = "jtag_axi_wrapper"
 SRC_DIR = "rtl"
 BUS_ARCH_DIR = "rtl/bus_arch_sv_pkg"
 INCLUDE_DIR = "rtl/include"

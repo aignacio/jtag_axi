@@ -1,7 +1,7 @@
-`ifndef __JTAG_PKG__
-  `define __JTAG_PKG__
+`ifndef __JTAG_AXI_PKG__
+  `define __JTAG_AXI_PKG__
 
-package jtag_pkg;
+package jtag_axi_pkg;
   import amba_axi_pkg::axi_size_t;
   import amba_axi_pkg::axi_addr_t;
   import amba_axi_pkg::axi_data_t;

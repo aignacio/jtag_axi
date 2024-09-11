@@ -1,12 +1,12 @@
 /**
- * File              : jtag_wrapper.sv
+ * File              : jtag_axi_tap_wrapper.sv
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 25.08.2024
- * Last Modified Date: 10.09.2024
+ * Last Modified Date: 11.09.2024
  */
-module jtag_wrapper
-  import jtag_pkg::*;
+module jtag_axi_tap_wrapper
+  import jtag_axi_pkg::*;
 #(
   parameter [31:0]  IDCODE_VAL    = 'hBADC0FFE,
   parameter int     IC_RST_WIDTH  = 4
@@ -29,16 +29,15 @@ module jtag_wrapper
   logic             select_dr;
   logic             tdo_ir;
   logic             tdo_dr;
-  s_axi_jtag_info_t axi_info;
 
-  tap_ctrl_fsm u_tap_ctrl_fsm (
+  jtag_axi_tap_ctrl_fsm u_tap_ctrl_fsm (
     .trstn      (trstn),
     .tck        (tck),
     .tms        (tms),
     .tap_state  (tap_state)
   );
 
-  instruction_register u_instruction_register (
+  jtag_axi_instruction_register u_instruction_register (
     .trstn      (trstn),
     .tck        (tck),
     .tdi        (tdi),
@@ -50,7 +49,7 @@ module jtag_wrapper
 
   assign tdo  = (select_dr == 1'b0) ? tdo_ir : tdo_dr;
 
-  data_registers #(
+  jtag_axi_data_registers #(
     .IDCODE_VAL   (IDCODE_VAL),
     .IC_RST_WIDTH (IC_RST_WIDTH)
   ) u_data_registers (

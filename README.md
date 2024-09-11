@@ -6,7 +6,7 @@
 * [Encoding of AXI registers](#axi_drs)
 * [License](#lic)
 
-![rtl_uarch](docs/jtag_axi_bd.svg)
+![rtluarch](docs/jtag_axi_bd.svg)
 
 ## <a name="intro"></a> Description
 

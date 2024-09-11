@@ -1,12 +1,12 @@
 /**
- * File              : instruction_register.sv
+ * File              : jtag_axi_instruction_register.sv
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 25.08.2024
- * Last Modified Date: 08.09.2024
+ * Last Modified Date: 11.09.2024
  */
-module instruction_register
-  import jtag_pkg::*;
+module jtag_axi_instruction_register
+  import jtag_axi_pkg::*;
 (
   input                   trstn,
   input                   tck,

@@ -1,12 +1,12 @@
 /**
- * File              : data_registers.sv
+ * File              : jtag_axi_data_registers.sv
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 28.08.2024
- * Last Modified Date: 10.09.2024
+ * Last Modified Date: 11.09.2024
  */
-module data_registers
-  import jtag_pkg::*;
+module jtag_axi_data_registers
+  import jtag_axi_pkg::*;
 #(
   parameter [31:0]  IDCODE_VAL    = 'hBADC0FFE, 
   parameter int     IC_RST_WIDTH  = 4
