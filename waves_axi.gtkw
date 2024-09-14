@@ -1,0 +1,126 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Sat Sep 14 15:37:09 2024
+[*]
+[dumpfile] "run_dir/test_axi_verilator/dump.fst"
+[dumpfile_mtime] "Sat Sep 14 15:32:11 2024"
+[dumpfile_size] 6862
+[savefile] "waves_axi.gtkw"
+[timestart] 28090700
+[size] 1696 1209
+[pos] 2732 1156
+*-15.037310 28266900 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] .
+[treeopen] .jtag_axi_wrapper_tb.
+[treeopen] .jtag_axi_wrapper_tb.u_jtag_axi_wrapper.
+[sst_width] 281
+[signals_width] 214
+[sst_expanded] 1
+[sst_vpaned_height] 761
+@28
+jtag_axi_wrapper_tb.trstn
+jtag_axi_wrapper_tb.tck
+jtag_axi_wrapper_tb.tms
+jtag_axi_wrapper_tb.tdi
+jtag_axi_wrapper_tb.tdo
+@200
+-JDR
+@100000028
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_instruction_register.tap_state[3:0]
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_instruction_register.ir_ff[3:0]
+@22
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.axi_info_o.addr[31:0]
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.axi_info_o.data_wr[31:0]
+@28
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.axi_info_ff.ctrl.fifo_ocup[2:0]
+@100000028
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.axi_info_ff.ctrl.size[2:0]
+@28
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.axi_info_ff.ctrl.start
+@100000028
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.axi_info_ff.ctrl.txn_type
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.jtag_status_i.status[2:0]
+@22
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.jtag_status_i.data_rd[31:0]
+@200
+-Master_AXI
+@28
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_axi_dispatch.ares
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_axi_dispatch.clk
+@22
+jtag_axi_wrapper_tb.awid[7:0]
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.awaddr[31:0]
+@100000028
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.awburst[1:0]
+@22
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.awid[7:0]
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.awlen[7:0]
+@28
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.awuser[0]
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.awvalid
+jtag_axi_wrapper_tb.jtag_axi_miso_i.awready
+@22
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.wdata[31:0]
+@28
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.wlast
+@22
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.wstrb[3:0]
+@28
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.wvalid
+jtag_axi_wrapper_tb.jtag_axi_miso_i.wready
+@22
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.araddr[31:0]
+@100000028
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.arburst[1:0]
+@22
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.arlen[7:0]
+@100000028
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.arsize[2:0]
+@28
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.arvalid
+jtag_axi_wrapper_tb.jtag_axi_miso_i.arready
+@22
+jtag_axi_wrapper_tb.jtag_axi_miso_i.rdata[31:0]
+jtag_axi_wrapper_tb.jtag_axi_miso_i.rid[7:0]
+@28
+jtag_axi_wrapper_tb.jtag_axi_miso_i.rlast
+@100000028
+jtag_axi_wrapper_tb.jtag_axi_miso_i.rresp[1:0]
+@28
+jtag_axi_wrapper_tb.jtag_axi_miso_i.rvalid
+jtag_axi_wrapper_tb.jtag_axi_mosi_o.rready
+@22
+jtag_axi_wrapper_tb.bid[7:0]
+@29
+jtag_axi_wrapper_tb.bresp[1:0]
+@28
+jtag_axi_wrapper_tb.bvalid
+jtag_axi_wrapper_tb.bready
+[pattern_trace] 1
+[pattern_trace] 0

@@ -145,16 +145,16 @@ async def reset_fsm(dut):
     dut.tms.value = 0
     dut.tdi.value = 0
     dut.tck.value = 0
-    await Timer(10, units="ns")
+    await Timer(100, units="ns")
     dut.trstn.value = 1
-    await Timer(2, units="ns")
+    await Timer(50, units="ns")
 
 
 async def update_tck(dut):
     dut.tck.value = 0
-    await Timer(1, units="ns")
+    await Timer(100, units="ns")
     dut.tck.value = 1
-    await Timer(1, units="ns")
+    await Timer(100, units="ns")
 
 
 async def move_to_jtag_state(dut, state):
@@ -162,7 +162,11 @@ async def move_to_jtag_state(dut, state):
 
     transitions = JtagTrans[state]
 
-    await reset_fsm(dut)
+    for _ in range(5):
+        dut.tms.value = 0
+        await update_tck(dut)
+
+    #await reset_fsm(dut)
 
     for tms_value in transitions:
         dut.tms.value = tms_value
@@ -206,18 +210,18 @@ async def move_to_shift_dr(dut, value):
             break
 
         dut.tck.value = 0
-        await Timer(1, units="ns")
+        await Timer(100, units="ns")
         tdo.append(dut.tdo.value)
         dut.tck.value = 1
-        await Timer(1, units="ns")
+        await Timer(100, units="ns")
 
     dut.tms.value = 1
 
     dut.tck.value = 0
-    await Timer(1, units="ns")
+    await Timer(100, units="ns")
     tdo.append(dut.tdo.value)
     dut.tck.value = 1
-    await Timer(1, units="ns")
+    await Timer(100, units="ns")
     await update_tck(dut)
     dut.tms.value = 0
     await update_tck(dut)

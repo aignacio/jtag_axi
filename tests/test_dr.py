@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 11.09.2024
+# Last Modified Date: 14.09.2024
 import cocotb
 import os
 import logging
@@ -124,7 +124,7 @@ if cocotb.SIM_NAME:
             (InstJTAG.ADDR_AXI_REG, 32, AccessMode.RW, 0xffff_ffff),
             (InstJTAG.DATA_W_AXI_REG, 32, AccessMode.RW, 0xffff_ffff),
             (InstJTAG.CTRL_AXI_REG, 8, AccessMode.RW, 0xc7),
-            (InstJTAG.STATUS_AXI_REG, 37, AccessMode.RO, 0x1fffffffff),
+            (InstJTAG.STATUS_AXI_REG, 35, AccessMode.RO, 0x1fffffffff),
         ],
     )
     factory.generate_tests()

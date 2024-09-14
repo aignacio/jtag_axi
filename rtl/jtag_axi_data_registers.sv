@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 28.08.2024
- * Last Modified Date: 11.09.2024
+ * Last Modified Date: 14.09.2024
  */
 module jtag_axi_data_registers
   import jtag_axi_pkg::*;
@@ -168,7 +168,7 @@ module jtag_axi_data_registers
           next_sr[($bits(s_axi_jtag_status_t)-1):0] = jtag_status_i;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[($bits(axi_jtag_status_t)-1):0] = {tdi,sr_ff[($bits(axi_jtag_status_t)-1):1]};
+          next_sr[($bits(s_axi_jtag_status_t)-1):0] = {tdi,sr_ff[($bits(s_axi_jtag_status_t)-1):1]};
           tdo = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin

@@ -57,6 +57,10 @@ module jtag_axi_if
     jtag_axi_mosi_o.arid = axi_tid_t'(AXI_MASTER_ID);
 
     jtag_axi_mosi_o.awaddr = fifo_rd_txn.addr;
+    jtag_axi_mosi_o.awsize = fifo_rd_txn.size;
+    jtag_axi_mosi_o.awburst = AXI_INCR;
+
+    jtag_axi_mosi_o.araddr = fifo_rd_txn.addr;
     jtag_axi_mosi_o.arsize = fifo_rd_txn.size;
     jtag_axi_mosi_o.arburst = AXI_INCR;
 
@@ -92,6 +96,7 @@ module jtag_axi_if
         // it's always a single beat burst
         if (jtag_axi_miso_i.rvalid && ~fifo_wr_txn_full) begin
           fifo_rd_en_addr_op = 1'b1;
+          fifo_wr_en = 1'b1;
           unique case (jtag_axi_miso_i.rresp)
             AXI_OKAY:   fifo_wr_resp.status = JTAG_AXI_OKAY;
             AXI_EXOKAY: fifo_wr_resp.status = JTAG_AXI_EXOKAY;
@@ -104,6 +109,7 @@ module jtag_axi_if
         jtag_axi_mosi_o.bready = 1'b1;
         if (jtag_axi_miso_i.bvalid && ~fifo_wr_txn_full) begin
           fifo_rd_en_addr_op = 1'b1;
+          fifo_wr_en = 1'b1;
           unique case (jtag_axi_miso_i.bresp)
             AXI_OKAY:   fifo_wr_resp.status = JTAG_AXI_OKAY;
             AXI_EXOKAY: fifo_wr_resp.status = JTAG_AXI_EXOKAY;

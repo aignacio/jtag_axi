@@ -11,7 +11,7 @@ module jtag_axi_wrapper
 #(
   parameter [31:0]  IDCODE_VAL    = 'hBADC0FFE,
   parameter int     IC_RST_WIDTH  = 4,
-  parameter int     AXI_MASTER_ID = 0
+  parameter int     AXI_MASTER_ID = 1
 )(
   input                               trstn,
   input                               tck,
