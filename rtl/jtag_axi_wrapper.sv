@@ -3,14 +3,15 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 09.09.2024
- * Last Modified Date: 11.09.2024
+ * Last Modified Date: 14.09.2024
  */
 module jtag_axi_wrapper
   import jtag_axi_pkg::*;
   import amba_axi_pkg::*;
 #(
   parameter [31:0]  IDCODE_VAL    = 'hBADC0FFE,
-  parameter int     IC_RST_WIDTH  = 4
+  parameter int     IC_RST_WIDTH  = 4,
+  parameter int     AXI_MASTER_ID = 0
 )(
   input                               trstn,
   input                               tck,
@@ -31,8 +32,8 @@ module jtag_axi_wrapper
   logic                       axi_req_new;
 
   jtag_axi_tap_wrapper #(
-    .IDCODE_VAL   (IDCODE_VAL),
-    .IC_RST_WIDTH (IC_RST_WIDTH)
+    .IDCODE_VAL       (IDCODE_VAL),
+    .IC_RST_WIDTH     (IC_RST_WIDTH)
   ) u_jtag_tap_wrapper (
     .trstn            (trstn),
     .tck              (tck),
@@ -48,7 +49,9 @@ module jtag_axi_wrapper
     .axi_req_new_o    (axi_req_new)
   );
 
-  jtag_axi_dispatch u_axi_dispatch (
+  jtag_axi_dispatch #(
+    .AXI_MASTER_ID    (AXI_MASTER_ID)
+  ) u_axi_dispatch (
     .clk              (clk_axi),
     .ares             (ares_axi),
     .tck              (tck),

@@ -65,11 +65,17 @@ package jtag_axi_pkg;
   } s_axi_jtag_status_t;
 
   typedef struct packed {
-    logic           start;
-    axi_jtag_txn_t  txn_type;
-    axi_afifo_t     fifo_ocup;
-    axi_size_t      size;
+    logic             start;
+    axi_jtag_txn_t    txn_type;
+    axi_afifo_t       fifo_ocup;
+    axi_size_t        size;
   } s_axi_jtag_ctrl_t;
+
+  typedef struct packed {
+    axi_jtag_txn_t    txn_type;
+    axi_size_t        size;
+    axi_addr_t        addr;
+  } s_axi_afifo_to_axi_t;
 
   typedef struct packed {
     axi_addr_t        addr;

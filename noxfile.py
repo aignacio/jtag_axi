@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 08.10.2023
-# Last Modified Date: 11.09.2024
+# Last Modified Date: 14.09.2024
 
 import nox
 import os
@@ -23,7 +23,12 @@ def run(session):
     session.env["TIMEPREC"] = "1ps"
     session.env["TIMEUNIT"] = "1ns"
     session.install(
-        "pytest", "pytest-sugar", "pytest-xdist", "pytest-split", "cocotb >= 1.9.0"
+        "pytest",
+        "pytest-sugar", 
+        "pytest-xdist",
+        "pytest-split",
+        "cocotb >= 1.9.0",
+        "cocotbext-axi"
     )
     session.run("py.test", "-n", "auto", "-rP", "tests", *session.posargs)
 
