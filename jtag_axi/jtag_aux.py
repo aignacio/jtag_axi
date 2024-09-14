@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# File              : jtag.py
+# License           : MIT license <Check LICENSE>
+# Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
+# Date              : 15.09.2024
+# Last Modified Date: 15.09.2024
 from enum import Enum
 from cocotb.triggers import ClockCycles, Timer
 

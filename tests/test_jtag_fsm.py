@@ -4,17 +4,20 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 11.09.2024
+# Last Modified Date: 15.09.2024
 import cocotb
-import os
 import logging
 import pytest
 import random
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from pathlib import Path
 from random import randrange
 from const.const import cfg
-from const.jtag import JTAGFSM, JTAGState
+from jtag_axi.jtag_aux import JTAGFSM, JTAGState
 from cocotb.triggers import ClockCycles, Timer
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge

@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 08.10.2023
-# Last Modified Date: 14.09.2024
+# Last Modified Date: 15.09.2024
 
 import nox
 import os
@@ -30,7 +30,8 @@ def run(session):
         "cocotb >= 1.9.0",
         "cocotbext-axi"
     )
-    session.run("py.test", "-n", "auto", "-rP", "tests", *session.posargs)
+    session.run("py.test",
+                "-n", "auto", "-rF", "tests", *session.posargs)
 
 
 @nox.session(reuse_venv=True)

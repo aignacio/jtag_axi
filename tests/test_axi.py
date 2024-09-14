@@ -4,19 +4,20 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 14.09.2024
+# Last Modified Date: 15.09.2024
 import cocotb
-import os
 import logging
 import pytest
 import random
+import os
+import sys
 
-import const.jtag
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from pathlib import Path
 from random import randrange
 from const.const import cfg
-from const.jtag import reset_fsm, select_instruction, move_to_shift_dr
-from const.jtag import InstJTAG
+from jtag_axi.jtag_aux import reset_fsm, select_instruction, move_to_shift_dr, InstJTAG
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb.clock import Clock
 from cocotb.regression import TestFactory
