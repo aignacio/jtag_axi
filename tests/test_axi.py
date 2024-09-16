@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 15.09.2024
+# Last Modified Date: 16.09.2024
 import cocotb
 import logging
 import pytest
@@ -17,7 +17,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from pathlib import Path
 from random import randrange
 from const.const import cfg
-from jtag_axi.jtag_aux import reset_fsm, select_instruction, move_to_shift_dr, InstJTAG
+from jtag_axi.jtag_aux import reset_fsm, select_instruction
+from jtag_axi.jtag_aux import move_to_shift_dr, InstJTAG
+from jtag_axi.jtag_axi import SimJtagToAXI
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb.clock import Clock
 from cocotb.regression import TestFactory
@@ -28,6 +30,7 @@ from cocotbext.axi import AxiBus, AxiMaster, AxiRam
 
 
 CLK_100MHz = (10, "ns")
+TestFailure.__test__ = False
 
 
 def bin_list_to_num(binary_list):
@@ -45,31 +48,15 @@ def convert_to_bin_list(value, bits):
 
 @cocotb.test()
 async def run_test(dut):
-    await reset_fsm(dut)
-
     cocotb.start_soon(Clock(dut.clk_axi, *cfg.CLK_100MHz).start())
-
     axi_ram = AxiRam(AxiBus.from_entity(dut), dut.clk_axi, dut.ares_axi, size=2**32)
 
-    await select_instruction(dut, InstJTAG.ADDR_AXI_REG)
-    shifted_out = await move_to_shift_dr(dut, convert_to_bin_list(0x04, 32))
-    await select_instruction(dut, InstJTAG.DATA_W_AXI_REG)
-    shifted_out = await move_to_shift_dr(dut, convert_to_bin_list(0xDEADBEEF, 32))
-    await select_instruction(dut, InstJTAG.CTRL_AXI_REG)
-    shifted_out = await move_to_shift_dr(dut, convert_to_bin_list(0xC2, 8))
-    await ClockCycles(dut.clk_axi, 100)
+    jtag = SimJtagToAXI(dut, freq=10e6, addr_width=32, data_width=32)
 
-    await select_instruction(dut, InstJTAG.STATUS_AXI_REG)
-    for _ in range(3):
-        shifted_out = await move_to_shift_dr(dut, convert_to_bin_list(0x0, 35))
-
-    await select_instruction(dut, InstJTAG.CTRL_AXI_REG)
-    shifted_out = await move_to_shift_dr(dut, convert_to_bin_list(0x82, 8))
-    await ClockCycles(dut.clk_axi, 100)
-
-    await select_instruction(dut, InstJTAG.STATUS_AXI_REG)
-    for _ in range(3):
-        shifted_out = await move_to_shift_dr(dut, convert_to_bin_list(0xffffffff, 35))
+    await jtag.reset()
+    await jtag.init_jdr()
+    await jtag._set_addr_axi(0xDEADBEEF)
+    await jtag._set_data_axi(0xBABEBABE)
 
 
 def test_axi():

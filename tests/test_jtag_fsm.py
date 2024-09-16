@@ -26,6 +26,9 @@ from cocotb.result import TestFailure
 from cocotb.runner import get_runner
 
 
+TestFailure.__test__ = False
+
+
 async def reset_fsm(dut):
     dut._log.info(f"Resetting JTAG FSM")
     dut.trstn.value = 0

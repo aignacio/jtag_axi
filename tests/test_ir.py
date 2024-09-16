@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 15.09.2024
+# Last Modified Date: 16.09.2024
 import cocotb
 import logging
 import pytest
@@ -25,6 +25,9 @@ from cocotb.result import TestFailure
 from cocotb.runner import get_runner
 
 
+TestFailure.__test__ = False
+
+
 def rand_inst():
     return random.choice(list(InstJTAG))
 
@@ -35,9 +38,9 @@ async def run_test(dut):
 
     for _ in range(1000):
         inst = rand_inst()
-        await select_instruction(dut, inst)
+        await select_instruction(dut, inst.value[0])
         assert (
-            int(inst.value, 2) == dut.u_instruction_register.ir_ff.value
+            int(inst.value[0], 2) == dut.u_instruction_register.ir_ff.value
         ), "Instruction selected is wrong!"
 
 

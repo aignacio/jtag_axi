@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 15.09.2024
+# Last Modified Date: 16.09.2024
 import cocotb
 import logging
 import pytest
@@ -12,17 +12,21 @@ import random
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from pathlib import Path
 from random import randrange
 from const.const import cfg
-from jtag_axi.jtag_aux import reset_fsm, select_instruction, move_to_shift_dr, InstJTAG
+from jtag_axi.jtag_aux import reset_fsm, select_instruction
+from jtag_axi.jtag_aux import move_to_shift_dr, InstJTAG, AccessMode
 from cocotb.triggers import RisingEdge
 from cocotb.regression import TestFactory
 from cocotb.result import TestFailure
 from cocotb.runner import get_runner
 from enum import Enum
+
+
+TestFailure.__test__ = False
 
 
 def gen_bin_list(length):
@@ -39,11 +43,6 @@ def bin_list_to_num(binary_list):
     return int(binary_string, 2)
 
 
-class AccessMode(Enum):
-    RO = 1
-    RW = 2
-
-
 class JTAGDataRegister:
     def __init__(self, dut, ir_ins, shift_length, ac, mask):
         self.dut = dut
@@ -57,13 +56,13 @@ class JTAGDataRegister:
         self.dut.log.info(f"IR Instruction: {self.ir_ins}")
         self.dut.log.info(f"Shift Length: {self.shift_length}")
         self.dut.log.info(f"Access: {self.access}")
-        self.dut.log.info(f"Mask: {self.mask}")
+        self.dut.log.info(f"Mask: {hex(self.mask)}")
 
 
 @cocotb.test()
-async def run_test(dut, jtag_dr=(InstJTAG.BYPASS, 1, AccessMode.RO, 0x1)):
+async def run_test(dut, jtag_dr=InstJTAG.EXTEST):
     await reset_fsm(dut)
-    args = (dut,) + jtag_dr
+    args = (dut,) + jtag_dr.value
     dr = JTAGDataRegister(*args)
     dr.display()
     await select_instruction(dut, dr.ir_ins)
@@ -80,8 +79,7 @@ async def run_test(dut, jtag_dr=(InstJTAG.BYPASS, 1, AccessMode.RO, 0x1)):
         dut.log.info(f"\tout = {hex(bin_list_to_num(shifted_out))}")
         shifted_in = bin_list_to_num(shifted_in) & dr.mask
         shifted_out = bin_list_to_num(shifted_out)
-        assert(shifted_in == shifted_out),"Shifted out != Shifted in"
-
+        assert shifted_in == shifted_out, "Shifted out != Shifted in"
 
 
 def test_dr():
@@ -110,7 +108,9 @@ def test_dr():
     )
 
     runner.test(
-        hdl_toplevel="jtag_axi_tap_wrapper", test_module=test_name, plusargs=cfg.PLUS_ARGS
+        hdl_toplevel="jtag_axi_tap_wrapper",
+        test_module=test_name,
+        plusargs=cfg.PLUS_ARGS,
     )
 
 
@@ -119,13 +119,13 @@ if cocotb.SIM_NAME:
     factory.add_option(
         "jtag_dr",
         [
-            (InstJTAG.BYPASS, 1, AccessMode.RO, 0x1),
-            (InstJTAG.IC_RESET, 4, AccessMode.RW, 0xf),
-            (InstJTAG.IDCODE, 32, AccessMode.RO, 0xfff_ffff),
-            (InstJTAG.ADDR_AXI_REG, 32, AccessMode.RW, 0xffff_ffff),
-            (InstJTAG.DATA_W_AXI_REG, 32, AccessMode.RW, 0xffff_ffff),
-            (InstJTAG.CTRL_AXI_REG, 8, AccessMode.RW, 0xc7),
-            (InstJTAG.STATUS_AXI_REG, 35, AccessMode.RO, 0x1fffffffff),
+            InstJTAG.BYPASS,
+            InstJTAG.IC_RESET,
+            InstJTAG.IDCODE,
+            InstJTAG.ADDR_AXI_REG,
+            InstJTAG.DATA_W_AXI_REG,
+            InstJTAG.CTRL_AXI_REG,
+            InstJTAG.STATUS_AXI_REG,
         ],
     )
     factory.generate_tests()

@@ -1,25 +1,46 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# File              : jtag.py
+# File              : jtag_aux.py
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 15.09.2024
-# Last Modified Date: 15.09.2024
+# Last Modified Date: 16.09.2024
 from enum import Enum
 from cocotb.triggers import ClockCycles, Timer
 
-# Instruction Register Encoding
+
+# # Instruction Register Encoding
+# class InstJTAG(Enum):
+    # EXTEST         = "0b0000"
+    # SAMPLE_PRELOAD = "0b1010"
+    # IC_RESET       = "0b1100"
+    # IDCODE         = "0b1110"
+    # BYPASS         = "0b1111"
+    # ADDR_AXI_REG   = "0b0001"
+    # DATA_W_AXI_REG = "0b0010"
+    # DATA_R_AXI_REG = "0b0011"
+    # CTRL_AXI_REG   = "0b0100"
+    # STATUS_AXI_REG = "0b0101"
+
+
+class AccessMode(Enum):
+    RW = 1
+    RO = 2
+    WO = 3
+
+
 class InstJTAG(Enum):
-    EXTEST         = "0b0000"
-    SAMPLE_PRELOAD = "0b1010"
-    IC_RESET       = "0b1100"
-    IDCODE         = "0b1110"
-    BYPASS         = "0b1111"
-    ADDR_AXI_REG   = "0b0001"
-    DATA_W_AXI_REG = "0b0010"
-    DATA_R_AXI_REG = "0b0011"
-    CTRL_AXI_REG   = "0b0100"
-    STATUS_AXI_REG = "0b0101"
+    # Each entry: (binary_encoding, mask, policy, register_length)
+    EXTEST         = ("0b0000", 1,  AccessMode.RO, 0x1)
+    SAMPLE_PRELOAD = ("0b1010", 1,  AccessMode.RO, 0xF)
+    IC_RESET       = ("0b1100", 4,  AccessMode.RW, 0xF)
+    IDCODE         = ("0b1110", 32, AccessMode.RO, 0xFFFF_FFFF)
+    BYPASS         = ("0b1111", 1,  AccessMode.RO, 0x1)
+    ADDR_AXI_REG   = ("0b0001", 32, AccessMode.RW, 0xFFFF_FFFF)
+    DATA_W_AXI_REG = ("0b0010", 32, AccessMode.RW, 0xFFFF_FFFF)
+    CTRL_AXI_REG   = ("0b0100", 8,  AccessMode.RW, 0x47)
+    STATUS_AXI_REG = ("0b0101", 32, AccessMode.RO, 0xFFFF_FFFF)
+
 
 # JTAG TAP Controller States
 class JTAGState(Enum):
@@ -147,7 +168,7 @@ JtagTrans = {
 }
 
 async def reset_fsm(dut):
-    dut._log.info(f"Reset JTAG FSM")
+    dut.log.info(f"Reset JTAG FSM")
     dut.trstn.value = 0
     dut.tms.value = 0
     dut.tdi.value = 0
@@ -181,12 +202,12 @@ async def move_to_jtag_state(dut, state):
 
 
 async def select_instruction(dut, instr):
-    dut._log.info(f"Setting up instr: {instr}")
+    dut.log.info(f"Setting up instr: {instr}")
     await move_to_jtag_state(dut, JTAGState.SHIFT_IR)
 
-    for idx, tdi_val in enumerate(instr.value[2:][::-1]):
+    for idx, tdi_val in enumerate(instr[2:][::-1]):
         dut.tdi.value = int(tdi_val)
-        if idx == len(instr.value[2:]) - 1:
+        if idx == len(instr[2:]) - 1:
             break
         await update_tck(dut)
 
@@ -198,7 +219,7 @@ async def select_instruction(dut, instr):
 
 
 async def move_to_shift_dr(dut, value):
-    dut._log.info(f"Moving to shift DR")
+    dut.log.info(f"Moving to shift DR")
 
     # Assuming we're on RUN_TEST_IDLE
     dut.tdi.value = 0

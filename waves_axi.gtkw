@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Sat Sep 14 15:37:09 2024
+[*] Mon Sep 16 01:13:13 2024
 [*]
 [dumpfile] "run_dir/test_axi_verilator/dump.fst"
-[dumpfile_mtime] "Sat Sep 14 15:32:11 2024"
-[dumpfile_size] 6862
+[dumpfile_mtime] "Mon Sep 16 01:12:13 2024"
+[dumpfile_size] 5679
 [savefile] "waves_axi.gtkw"
-[timestart] 28090700
+[timestart] 0
 [size] 1696 1209
-[pos] 2732 1156
-*-15.037310 28266900 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[pos] 2685 1252
+*-20.829657 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -39,6 +39,7 @@
 [treeopen] .
 [treeopen] .jtag_axi_wrapper_tb.
 [treeopen] .jtag_axi_wrapper_tb.u_jtag_axi_wrapper.
+[treeopen] .jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.
 [sst_width] 281
 [signals_width] 214
 [sst_expanded] 1
@@ -50,12 +51,16 @@ jtag_axi_wrapper_tb.tms
 jtag_axi_wrapper_tb.tdi
 jtag_axi_wrapper_tb.tdo
 @200
+-
 -JDR
 @100000028
 jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_instruction_register.tap_state[3:0]
 jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_instruction_register.ir_ff[3:0]
 @22
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.ic_rst_ff[3:0]
+@23
 jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.axi_info_o.addr[31:0]
+@22
 jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.axi_info_o.data_wr[31:0]
 @28
 jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.axi_info_ff.ctrl.fifo_ocup[2:0]
@@ -69,6 +74,7 @@ jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.jtag_
 @22
 jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.jtag_status_i.data_rd[31:0]
 @200
+-
 -Master_AXI
 @28
 jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_axi_dispatch.ares
@@ -85,6 +91,8 @@ jtag_axi_wrapper_tb.jtag_axi_mosi_o.awlen[7:0]
 jtag_axi_wrapper_tb.jtag_axi_mosi_o.awuser[0]
 jtag_axi_wrapper_tb.jtag_axi_mosi_o.awvalid
 jtag_axi_wrapper_tb.jtag_axi_miso_i.awready
+@200
+-
 @22
 jtag_axi_wrapper_tb.jtag_axi_mosi_o.wdata[31:0]
 @28
@@ -94,6 +102,16 @@ jtag_axi_wrapper_tb.jtag_axi_mosi_o.wstrb[3:0]
 @28
 jtag_axi_wrapper_tb.jtag_axi_mosi_o.wvalid
 jtag_axi_wrapper_tb.jtag_axi_miso_i.wready
+@200
+-
+@22
+jtag_axi_wrapper_tb.bid[7:0]
+@28
+jtag_axi_wrapper_tb.bresp[1:0]
+jtag_axi_wrapper_tb.bvalid
+jtag_axi_wrapper_tb.bready
+@200
+-
 @22
 jtag_axi_wrapper_tb.jtag_axi_mosi_o.araddr[31:0]
 @100000028
@@ -105,22 +123,16 @@ jtag_axi_wrapper_tb.jtag_axi_mosi_o.arsize[2:0]
 @28
 jtag_axi_wrapper_tb.jtag_axi_mosi_o.arvalid
 jtag_axi_wrapper_tb.jtag_axi_miso_i.arready
+@200
+-
 @22
 jtag_axi_wrapper_tb.jtag_axi_miso_i.rdata[31:0]
 jtag_axi_wrapper_tb.jtag_axi_miso_i.rid[7:0]
-@28
-jtag_axi_wrapper_tb.jtag_axi_miso_i.rlast
 @100000028
 jtag_axi_wrapper_tb.jtag_axi_miso_i.rresp[1:0]
 @28
+jtag_axi_wrapper_tb.jtag_axi_miso_i.rlast
 jtag_axi_wrapper_tb.jtag_axi_miso_i.rvalid
 jtag_axi_wrapper_tb.jtag_axi_mosi_o.rready
-@22
-jtag_axi_wrapper_tb.bid[7:0]
-@29
-jtag_axi_wrapper_tb.bresp[1:0]
-@28
-jtag_axi_wrapper_tb.bvalid
-jtag_axi_wrapper_tb.bready
 [pattern_trace] 1
 [pattern_trace] 0
