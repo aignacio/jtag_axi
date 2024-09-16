@@ -31,7 +31,7 @@ def run(session):
         "cocotbext-axi"
     )
     session.run("py.test",
-                "-n", "auto", "-rF", "tests", *session.posargs)
+                "-n", "auto", "-rP", "tests", *session.posargs)
 
 
 @nox.session(reuse_venv=True)
