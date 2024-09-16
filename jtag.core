@@ -3,14 +3,20 @@ name: core:jtag:v0.0.1
 description: JTAG to AXI
 
 filesets:
-  jtag_wrapper:
+  jtag_axi_wrapper:
     files:
+      - rtl/cdc_components/src/cdc_async_fifo_w_ocup.sv
       - rtl/bus_arch_sv_pkg/amba_axi_pkg.sv
-      - rtl/include/jtag_pkg.sv
-      - rtl/data_registers.sv
-      - rtl/instruction_register.sv
-      - rtl/jtag_wrapper.sv
-      - rtl/tap_ctrl_fsm.sv
+      - rtl/include/jtag_axi_pkg.sv
+      - rtl/jtag_axi_data_registers.sv
+      - rtl/jtag_axi_dispatch.sv
+      - rtl/jtag_axi_fifo.sv
+      - rtl/jtag_axi_if.sv
+      - rtl/jtag_axi_instruction_register.sv
+      - rtl/jtag_axi_tap_ctrl_fsm.sv
+      - rtl/jtag_axi_tap_wrapper.sv
+      - rtl/jtag_axi_wrapper.sv
+      - fpga/jtag_fpga_wrapper.sv
     file_type: systemVerilogSource
 
   arty7_constraints:
@@ -19,8 +25,8 @@ filesets:
 
 targets:
   default: &default
-    filesets: [jtag_wrapper]
-    toplevel: jtag_wrapper
+    filesets: [jtag_axi_wrapper]
+    toplevel: jtag_fpga_wrapper
 
   a7_synth:
     <<: *default
@@ -31,4 +37,4 @@ targets:
     tools:
       vivado:
         part : xc7a35ticsg324-1L
-    toplevel: jtag_wrapper
+    toplevel: jtag_fpga_wrapper
