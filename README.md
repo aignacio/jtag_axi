@@ -58,7 +58,7 @@ The registers `CTRL_AXI_REG` and `STATUS_AXI_REG` follow a specific format and t
 |    CTRL_AXI_REG    |               **Start<br>(1 bit)**               | **Txn type<br>(1 bit)** |               **Free Slots<br>(3 bits)**              |               **Size AXI txn<br>(3 bits)**              |
 |:------------------:|:------------------------------------------------:|:-----------------------:|:-----------------------------------------------------:|:-------------------------------------------------------:|
 |      Bit order     |                        MSB                       |           ...           |                          ...                          |                           LSB                           |
-| **Access (RW/RO)** |           RW<br>(writes not preserved)           |            RW           |                           RO                          |                            RW                           |
+| **Access (RW/RO)** |           WO<br>(writes not preserved)           |            RW           |                           RO                          |                            RW                           |
 |   **Description**  | Once written 1, dispatches<br>an AXI transaction |   1 - Write, 0 - Read   | Number of slots available<br>in the Asynchronous FIFO | Size of the AXI transaction<br>following AXIv4 encoding |
 
 ## AXI Write - Flow sequence
