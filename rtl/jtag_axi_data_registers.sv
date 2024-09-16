@@ -3,12 +3,13 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 28.08.2024
- * Last Modified Date: 14.09.2024
+ * Last Modified Date: 16.09.2024
  */
 module jtag_axi_data_registers
   import jtag_axi_pkg::*;
+  import amba_axi_pkg::axi_addr_t;
 #(
-  parameter [31:0]  IDCODE_VAL    = 'hBADC0FFE, 
+  parameter [31:0]  IDCODE_VAL    = 'hBADC0FFE,
   parameter int     IC_RST_WIDTH  = 4
 )(
   input                               trstn,
@@ -19,15 +20,16 @@ module jtag_axi_data_registers
   input   ir_decoding_t               ir_dec,
   // Data Register output
   output  logic [(IC_RST_WIDTH-1):0]  ic_rst,
-  // To AXI I/F 
-  input   s_axi_jtag_status_t         jtag_status_i, 
+  // To AXI I/F
+  input   s_axi_jtag_status_t         jtag_status_i,
   output  logic                       axi_status_rd_o, // Ack last status
   input   axi_afifo_t                 afifo_slots_i,
   output  s_axi_jtag_info_t           axi_info_o,
   output  logic                       axi_req_new_o // Dispatch a new txn when assert
 );
-  localparam DR_MAX_WIDTH = $bits(s_axi_jtag_status_t); // Needs to be the larg 
-                                                        // est DR...
+  // Needs to be the largest DR...
+  localparam DR_MAX_WIDTH = ($bits(s_axi_jtag_status_t) > $bits(axi_addr_t)) ?
+                            $bits(s_axi_jtag_status_t) : $bits(axi_addr_t); 
 
   logic bypass_ff, next_bypass;
   logic bypass_n_ff;
@@ -80,6 +82,9 @@ module jtag_axi_data_registers
           next_bypass = tdi;
           tdo = bypass_n_ff;
         end
+        else if (tap_state == EXIT1_DR) begin
+          tdo = bypass_n_ff;
+        end
       end
       IDCODE: begin
         // IEEE Std 1149.1-2013 - Section 8.13
@@ -98,6 +103,9 @@ module jtag_axi_data_registers
           next_idcode = {tdi,idcode_ff[31:1]};
           tdo = idcode_n_ff[0];
         end
+        else if (tap_state == EXIT1_DR) begin
+          tdo = idcode_n_ff[0];
+        end
       end
       SAMPLE_PRELOAD: begin
         if (tap_state == CAPTURE_DR) begin
@@ -107,10 +115,13 @@ module jtag_axi_data_registers
           next_sr = {tdi,sr_ff[(DR_MAX_WIDTH-1):1]};
           tdo = sr_n_ff[0];
         end
+        else if (tap_state == EXIT1_DR) begin
+          tdo = sr_n_ff[0];
+        end
       end
       IC_RESET: begin
         // IEEE Std 1149.1-2013 - Section 8.4
-        // The purpose of the optional IC_RESET instruction is to provide a means 
+        // The purpose of the optional IC_RESET instruction is to provide a means
         // to control reset and related signals to the system logic using the TAP.
         // This instruction selects the reset selection register (see Clause 17)
         // ...
@@ -124,6 +135,9 @@ module jtag_axi_data_registers
         else if (tap_state == UPDATE_DR) begin
           next_ic_rst = sr_ff[(IC_RST_WIDTH-1):0];
         end
+        else if (tap_state == EXIT1_DR) begin
+          tdo = sr_n_ff[0];
+        end
       end
       ADDR_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
@@ -135,6 +149,9 @@ module jtag_axi_data_registers
         end
         else if (tap_state == UPDATE_DR) begin
           next_axi_info.addr = sr_ff[(`AXI_ADDR_WIDTH-1):0];
+        end
+        else if (tap_state == EXIT1_DR) begin
+          tdo = sr_n_ff[0];
         end
       end
       DATA_W_AXI_REG: begin
@@ -148,6 +165,9 @@ module jtag_axi_data_registers
         else if (tap_state == UPDATE_DR) begin
           next_axi_info.data_wr = sr_ff[(`AXI_DATA_WIDTH-1):0];
         end
+        else if (tap_state == EXIT1_DR) begin
+          tdo = sr_n_ff[0];
+        end
       end
       CTRL_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
@@ -160,7 +180,10 @@ module jtag_axi_data_registers
         else if (tap_state == UPDATE_DR) begin
           next_axi_info.ctrl = s_axi_jtag_ctrl_t'(sr_ff);
           next_axi_req = next_axi_info.ctrl.start;
-          //next_axi_info.ctrl.start = 1'b0;
+          next_axi_info.ctrl.start = 1'b0;
+        end
+        else if (tap_state == EXIT1_DR) begin
+          tdo = sr_n_ff[0];
         end
       end
       STATUS_AXI_REG: begin
@@ -173,6 +196,9 @@ module jtag_axi_data_registers
         end
         else if (tap_state == UPDATE_DR) begin
           next_axi_status_rd = 1'b1;
+        end
+        else if (tap_state == EXIT1_DR) begin
+          tdo = sr_n_ff[0];
         end
       end
     endcase
@@ -201,9 +227,9 @@ module jtag_axi_data_registers
   end
 
   //  IEEE Std 1149.1-2013 - Section 4.5.1
-  // a) Changes in the state of the signal driven through TDO shall occur 
+  // a) Changes in the state of the signal driven through TDO shall occur
   //    only on the falling edge of either TCK or the optional TRST*.
-  // b) The TDO driver shall be set to its inactive drive state except 
+  // b) The TDO driver shall be set to its inactive drive state except
   //    when the shifting of data is in progress (see 6.1.2).
   always_ff @ (negedge tck or negedge trstn) begin
     if (trstn == 1'b0) begin
@@ -220,5 +246,4 @@ module jtag_axi_data_registers
 
   `ERROR_IF(IC_RST_WIDTH>DR_MAX_WIDTH, "Illegal values for parameters \
                                         IC_RST_WIDTH and DR_MAX_WIDTH")
-
 endmodule
