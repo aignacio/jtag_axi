@@ -4,23 +4,9 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 15.09.2024
-# Last Modified Date: 16.09.2024
+# Last Modified Date: 17.09.2024
 from enum import Enum
 from cocotb.triggers import ClockCycles, Timer
-
-
-# # Instruction Register Encoding
-# class InstJTAG(Enum):
-    # EXTEST         = "0b0000"
-    # SAMPLE_PRELOAD = "0b1010"
-    # IC_RESET       = "0b1100"
-    # IDCODE         = "0b1110"
-    # BYPASS         = "0b1111"
-    # ADDR_AXI_REG   = "0b0001"
-    # DATA_W_AXI_REG = "0b0010"
-    # DATA_R_AXI_REG = "0b0011"
-    # CTRL_AXI_REG   = "0b0100"
-    # STATUS_AXI_REG = "0b0101"
 
 
 class AccessMode(Enum):
@@ -38,8 +24,9 @@ class InstJTAG(Enum):
     BYPASS         = ("0b1111", 1,  AccessMode.RO, 0x1)
     ADDR_AXI_REG   = ("0b0001", 32, AccessMode.RW, 0xFFFF_FFFF)
     DATA_W_AXI_REG = ("0b0010", 32, AccessMode.RW, 0xFFFF_FFFF)
-    CTRL_AXI_REG   = ("0b0100", 8,  AccessMode.RW, 0x47)
-    STATUS_AXI_REG = ("0b0101", 32, AccessMode.RO, 0xFFFF_FFFF)
+    CTRL_AXI_REG   = ("0b0100", 8,  AccessMode.RW, 0xC7)
+    STATUS_AXI_REG = ("0b0101", 35, AccessMode.RO, 0xFFFF_FFFF)
+    WSTRB_AXI_REG  = ("0b0011", 4,  AccessMode.RW, 0xF)
 
 
 # JTAG TAP Controller States

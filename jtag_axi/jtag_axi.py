@@ -4,12 +4,33 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 15.09.2024
-# Last Modified Date: 16.09.2024
+# Last Modified Date: 17.09.2024
 import os
 from abc import abstractmethod
 from .jtag_aux import JTAGState, InstJTAG
 from cocotb.triggers import ClockCycles, Timer
 from cocotb.handle import SimHandleBase
+from enum import Enum
+
+
+_AXI_ADDR_WIDTH = 32
+_AXI_DATA_WIDTH = 32
+
+
+def bits_to_ff_hex(num_bits):
+    """
+    Converts the given number of bits to a single integer with each byte filled with 0xFF.
+
+    :param num_bits: The number of bits.
+    :return: An integer representing the value filled with 0xFF per byte.
+    """
+    # Calculate the number of bytes needed (each byte is 8 bits)
+    num_bytes = (num_bits + 7) // 8  # Add 7 to round up to the nearest byte
+
+    # Create the integer value where all bits are set to 1 for the given number of bytes
+    ff_value = (1 << (num_bytes * 8)) - 1
+
+    return ff_value
 
 
 def bin_to_num(binary_list):
@@ -25,12 +46,130 @@ def bin_list(value, bits):
     return [int(bit) for bit in bin_str]
 
 
+class AXISize(Enum):
+    AXI_BYTE = 0
+    AXI_HALF_WORD = 1
+    AXI_WORD = 2
+    AXI_DWORD = 3
+    AXI_BYTES_16 = 4
+    AXI_BYTES_32 = 5
+    AXI_BYTES_64 = 6
+    AXI_BYTES_128 = 7
+
+
+class TxnType(Enum):
+    AXI_READ = 0
+    AXI_WRITE = 1
+
+
+class JDRCtrlAXI:
+    def __init__(
+        self,
+        start=0,
+        txn_type=TxnType.AXI_READ,
+        fifo_ocup=0,
+        size_axi=AXISize.AXI_BYTE,
+    ):
+        self.start = start & 0x1  # 1 bit
+        self.txn_type = txn_type  # 1 bit
+        self.fifo_ocup = fifo_ocup & 0x7  # 3 bits
+        self.size_axi = size_axi  # 3 bits
+
+    def get_jdr(self):
+        """
+        Packs the fields into an 8-bit register and returns the formatted value.
+        | START [7] | TXN TYPE [6] | fifo_ocup [5:3] | SIZE_AXI [2:0] |
+        """
+        jdr = (
+            (self.start << 7)
+            | (self.txn_type.value << 6)
+            | (self.fifo_ocup << 3)
+            | (self.size_axi.value)
+        )
+        return jdr
+
+    @classmethod
+    def from_jdr(cls, jdr_value):
+        """
+        Takes an 8-bit value and decodes it into the class attributes.
+        """
+        start = (jdr_value >> 7) & 0x1
+        txn_type = TxnType((jdr_value >> 6) & 0x1)
+        fifo_ocup = (jdr_value >> 3) & 0x7
+        size_axi = AXISize(jdr_value & 0x7)
+        return cls(
+            start=start, txn_type=txn_type, fifo_ocup=fifo_ocup, size_axi=size_axi
+        )
+
+    def __str__(self):
+        return (
+            f"START: {self.start}, TXN_TYPE: {self.txn_type.name}, "
+            f"fifo_ocup: {self.fifo_ocup}, SIZE_AXI: {self.size_axi.name}"
+        )
+
+
+class JTAGToAXIStatus(Enum):
+    JTAG_IDLE = 0
+    JTAG_RUNNING = 1
+    JTAG_TIMEOUT = 2
+    JTAG_AXI_OKAY = 3
+    JTAG_AXI_EXOKAY = 4
+    JTAG_AXI_SLVERR = 5
+    JTAG_AXI_DECERR = 6
+
+
+class JDRStatusAXI:
+    def __init__(
+        self,
+        data_rd=0,
+        status=0,
+    ):
+        self.data_rd = data_rd & bits_to_ff_hex(_AXI_DATA_WIDTH)
+        self.status = JTAGToAXIStatus(status & 0x7)  # 3 bit
+
+    def get_jdr(self):
+        """
+        Packs the fields into an 35-bit register and returns the formatted value.
+        | DATA_RD [(_AXI_ADDR_WIDTH+33-1):3] | STATUS [2:0] |
+        """
+        jdr = (self.data_rd << 3) | (self.status.value << 0)
+        return jdr
+
+    @classmethod
+    def from_jdr(cls, jdr_value):
+        """
+        Takes an 35-bit value and decodes it into the class attributes.
+        """
+        data_rd_new = (jdr_value >> 3) & bits_to_ff_hex(_AXI_DATA_WIDTH)
+        status_new = jdr_value & 0x7
+        return cls(data_rd=data_rd_new, status=status_new)
+
+    def __str__(self):
+        return f"DATA RD: {hex(self.data_rd)}, STATUS: {self.status}"
+
+    def __eq__(self, other):
+        if isinstance(other, JDRStatusAXI):
+            return (
+                self.data_rd == other.data_rd
+                and self.status == other.status
+            )
+        return False
+
+
 class BaseJtagToAXI:
     @abstractmethod
     def __init__(self, addr_width: int = 32, data_width: int = 32):
         """Initialize the interface (for hardware or DUT)."""
         self.addr_width = addr_width
         self.data_width = data_width
+        # Initialize JDR values
+        self.idcode_jdr = 0
+        self.ic_reset_jdr = 0
+        self.addr_axi_jdr = 0
+        self.data_write_axi_jdr = 0
+        self.wstrb_axi_jdr = 0
+        self.ctrl_axi_jdr = JDRCtrlAXI()
+        self.status_axi_jdr = 0
         self.tap_state = JTAGState.TEST_LOGIC_RESET
 
     @abstractmethod
@@ -70,12 +209,6 @@ class SimJtagToAXI(BaseJtagToAXI):
         """Initialize the DUT JTAG interface."""
         self.dut = dut
         self.freq_period = (1 / freq) * 1e9
-        # Initialize JDR values
-        self.ic_reset_jdr = 0
-        self.addr_axi_jdr = 0
-        self.data_write_axi_jdr = 0
-        self.ctrl_axi_jdr = 0
-        self.status_axi_jdr = 0
 
         super().__init__(**kwargs)
 
@@ -200,7 +333,7 @@ class SimJtagToAXI(BaseJtagToAXI):
         self.dut.tck.value = 1
         await Timer(self.freq_period / 2, units="ns")
 
-    async def _set_tap_state(self, next_state):
+    async def _shift_tap_state(self, next_state):
         """
         Sets the TAP controller state to the desired next state by calculating
         the appropriate TMS sequence. If the transition is not directly possible,
@@ -224,8 +357,8 @@ class SimJtagToAXI(BaseJtagToAXI):
             self.dut.tms.value = tms
             await self._update_tck()
 
-    async def _set_ir(self, instr):
-        await self._set_tap_state(JTAGState.SHIFT_IR)
+    async def _shift_ir(self, instr):
+        await self._shift_tap_state(JTAGState.SHIFT_IR)
 
         tdo = []
         for idx, tdi_val in enumerate(instr.value[0][2:][::-1]):
@@ -238,14 +371,14 @@ class SimJtagToAXI(BaseJtagToAXI):
             self.dut.tck.value = 1
             await Timer(self.freq_period / 2, units="ns")
 
-        await self._set_tap_state(JTAGState.UPDATE_IR)
+        await self._shift_tap_state(JTAGState.UPDATE_IR)
         tdo.append(self.dut.tdo.value)
-        await self._set_tap_state(JTAGState.RUN_TEST_IDLE)
+        await self._shift_tap_state(JTAGState.RUN_TEST_IDLE)
         return tdo[::-1]
 
-    async def _set_dr(self, jdr_value, jdr_length):
+    async def _shift_dr(self, jdr_value, jdr_length):
         jdr_value = bin_list(jdr_value, jdr_length)
-        await self._set_tap_state(JTAGState.SHIFT_DR)
+        await self._shift_tap_state(JTAGState.SHIFT_DR)
 
         tdo = []
         for idx, tdi_val in enumerate(jdr_value[::-1]):
@@ -265,34 +398,158 @@ class SimJtagToAXI(BaseJtagToAXI):
         self.dut.tck.value = 1
         await Timer(self.freq_period / 2, units="ns")
         self.tap_state = JTAGState.EXIT1_DR
-        await self._set_tap_state(JTAGState.UPDATE_DR)
-        await self._set_tap_state(JTAGState.RUN_TEST_IDLE)
+        await self._shift_tap_state(JTAGState.UPDATE_DR)
+        await self._shift_tap_state(JTAGState.RUN_TEST_IDLE)
         return tdo[::-1]
 
     async def _get_idcode(self):
-        tdo = await self._set_ir(InstJTAG.IDCODE)
-        tdo = await self._set_dr(0x00, 32)
+        tdo = await self._shift_ir(InstJTAG.IDCODE)
+        tdo = await self._shift_dr(0x00, 32)
         return bin_to_num(tdo)
 
-    async def _set_jdr(self, jdr: InstJTAG, value: int):
-        tdo = await self._set_ir(jdr)
-        tdo = await self._set_dr(value, jdr.value[1])
+    async def _shift_jdr(self, jdr: InstJTAG, value: int):
+        tdo = await self._shift_ir(jdr)
+        tdo = await self._shift_dr(value, jdr.value[1])
         return bin_to_num(tdo)
 
-    async def init_jdr(self):
-        self.idcode = hex(await self._get_idcode())
-        ic_reset = hex(await self._set_jdr(InstJTAG.IC_RESET, 0x00))
-        self.ic_reset = 0x00
+    async def _get_jdr(self, jdr: InstJTAG):
+        tdo = await self._shift_ir(jdr)
+        old = bin_to_num(await self._shift_dr(0x00, jdr.value[1]))
+        tdo = await self._shift_dr(old, jdr.value[1])
+        return old
+
+    async def read_jdrs(self):
+        self.idcode_jdr = hex(await self._get_idcode())
+        self.ic_reset_jdr = hex(await self._get_jdr(InstJTAG.IC_RESET))
+        self.addr_axi_jdr = hex(await self._get_jdr(InstJTAG.ADDR_AXI_REG))
+        self.data_write_axi_jdr = hex(await self._get_jdr(InstJTAG.DATA_W_AXI_REG))
+        self.status_axi_jdr = hex(await self._get_jdr(InstJTAG.STATUS_AXI_REG))
+        self.ctrl_axi_jdr = hex(await self._get_jdr(InstJTAG.CTRL_AXI_REG))
+        self.wstrb_axi_jdr = hex(await self._get_jdr(InstJTAG.WSTRB_AXI_REG))
+
         self.dut.log.info("---------------------------------")
         self.dut.log.info("|=> JDR - JTAG Data Registers <=|")
         self.dut.log.info("---------------------------------")
-        self.dut.log.info(f"- IDCODE     \t{self.idcode}")
-        self.dut.log.info(f"- IC_RESET   \tWas: {ic_reset} \tNow: 0x00")
+        self.dut.log.info(f"- IDCODE     \t{self.idcode_jdr}")
+        self.dut.log.info(f"- IC_RESET   \t{self.ic_reset_jdr}")
+        self.dut.log.info(f"- ADDR_AXI   \t{self.addr_axi_jdr}")
+        self.dut.log.info(f"- DATA_AXI   \t{self.data_write_axi_jdr}")
+        self.dut.log.info(f"- CTRL_AXI   \t{self.ctrl_axi_jdr}")
+        self.dut.log.info(f"- WSTRB_AXI  \t{self.wstrb_axi_jdr}")
 
-    async def _set_addr_axi(self, value: int):
-        self.addr_axi = value
-        await self._set_jdr(InstJTAG.ADDR_AXI_REG, value)
+    async def _shift_addr_axi(self, value: int):
+        self.addr_axi_jdr = value
+        tdo = await self._shift_jdr(InstJTAG.ADDR_AXI_REG, value)
+        return tdo
 
-    async def _set_data_axi(self, value: int):
-        self.data_axi = value
-        await self._set_jdr(InstJTAG.DATA_W_AXI_REG, value)
+    async def _shift_data_axi(self, value: int):
+        self.data_write_axi_jdr = value
+        tdo = await self._shift_jdr(InstJTAG.DATA_W_AXI_REG, value)
+        return tdo
+
+    async def _shift_wstrb_axi(self, value: int):
+        self.wstrb_axi_jdr = value
+        tdo = await self._shift_jdr(InstJTAG.WSTRB_AXI_REG, value)
+        return tdo
+
+    async def _shift_ctrl_axi(self, value: JDRCtrlAXI):
+        self.ctrl_axi_jdr = value
+        tdo = await self._shift_jdr(InstJTAG.CTRL_AXI_REG, value.get_jdr())
+        return tdo
+
+    async def _shift_status_axi(self, value: JDRStatusAXI):
+        self.status_axi_jdr = value
+        tdo = await self._shift_jdr(InstJTAG.STATUS_AXI_REG, value.get_jdr())
+        return tdo
+
+    def _convert_size(self, value):
+        """Convert byte size into asize."""
+        for size in AXISize:
+            if (2**size.value) == value:
+                return size
+        raise ValueError(f"No asize value found for {value} number of bytes")
+
+    async def write_axi(self, address, data, size, wstrb = 0xF):
+        if self.addr_axi_jdr != address:
+            if address < 2**self.addr_width:
+                await self._shift_addr_axi(address)
+            else:
+                raise ValueError(
+                    "Address exceeds max of address width {self.addr_width}"
+                )
+        else:
+            self.dut._log.debug("Skipping address shift due to value match")
+
+        if self.data_write_axi_jdr != data:
+            if data < 2**self.data_width:
+                await self._shift_data_axi(data)
+            else:
+                raise ValueError(
+                    "Data write exceeds max of data width {self.data_width}"
+                )
+        else:
+            self.dut._log.debug("Skipping data shift due to value match")
+
+        if self.wstrb_axi_jdr != wstrb:
+            await self._shift_wstrb_axi(wstrb)
+        else:
+            self.dut._log.debug("Skipping data shift due to value match")
+
+        empty_ctrl = JDRCtrlAXI(start=0)
+        send_write = JDRCtrlAXI(
+            start=1, txn_type=TxnType.AXI_WRITE, size_axi=self._convert_size(size)
+        )
+        current = JDRCtrlAXI.from_jdr(await self._shift_ctrl_axi(empty_ctrl))
+
+        # Check whether we have enough free slots to send
+        while current.fifo_ocup >= 4:
+            await self._shift_status_axi(JDRStatusAXI())
+            current = JDRCtrlAXI.from_jdr(await self._shift_ctrl_axi(empty_ctrl))
+
+        # Send the TXN
+        current = JDRCtrlAXI.from_jdr(await self._shift_ctrl_axi(send_write))
+        self.dut.log.info(
+            f"[JTAG to AXI][WRITE] Addr = {hex(address)} / Data = {hex(data)}"
+            f" Size = {self._convert_size(size)} / WrStrb = {bin(wstrb)}"
+        )
+        status_axi = JDRStatusAXI.from_jdr(await self._shift_status_axi(JDRStatusAXI()))
+        while status_axi.status == JTAGToAXIStatus.JTAG_RUNNING:
+            status_axi = JDRStatusAXI.from_jdr(
+                await self._shift_status_axi(JDRStatusAXI())
+            )
+        return status_axi
+
+    async def read_axi(self, address, size):
+        if self.addr_axi_jdr != address:
+            if address < 2**self.addr_width:
+                await self._shift_addr_axi(address)
+            else:
+                raise ValueError(
+                    "Address exceeds max of address width {self.addr_width}"
+                )
+        else:
+            self.dut._log.debug("Skipping address shift due to value match")
+
+        empty_ctrl = JDRCtrlAXI(start=0)
+        send_write = JDRCtrlAXI(
+            start=1, txn_type=TxnType.AXI_READ, size_axi=self._convert_size(size)
+        )
+        current = JDRCtrlAXI.from_jdr(await self._shift_ctrl_axi(empty_ctrl))
+
+        # Check whether we have enough free slots to send
+        while current.fifo_ocup >= 4:
+            await self._shift_status_axi(JDRStatusAXI())
+            current = JDRCtrlAXI.from_jdr(await self._shift_ctrl_axi(empty_ctrl))
+
+        # Send the TXN
+        current = JDRCtrlAXI.from_jdr(await self._shift_ctrl_axi(send_write))
+        self.dut.log.info(
+            f"[JTAG to AXI][READ] Addr = {hex(address)} / Size = {self._convert_size(size)}"
+        )
+
+        status_axi = JDRStatusAXI.from_jdr(await self._shift_status_axi(JDRStatusAXI()))
+        while status_axi.status == JTAGToAXIStatus.JTAG_RUNNING:
+            status_axi = JDRStatusAXI.from_jdr(
+                await self._shift_status_axi(JDRStatusAXI())
+            )
+        return status_axi

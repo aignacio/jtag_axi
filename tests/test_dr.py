@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 16.09.2024
+# Last Modified Date: 17.09.2024
 import cocotb
 import logging
 import pytest
@@ -126,6 +126,7 @@ if cocotb.SIM_NAME:
             InstJTAG.DATA_W_AXI_REG,
             InstJTAG.CTRL_AXI_REG,
             InstJTAG.STATUS_AXI_REG,
+            InstJTAG.WSTRB_AXI_REG,
         ],
     )
     factory.generate_tests()

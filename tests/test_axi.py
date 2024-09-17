@@ -4,13 +4,14 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 16.09.2024
+# Last Modified Date: 17.09.2024
 import cocotb
 import logging
 import pytest
 import random
 import os
 import sys
+import itertools
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -19,7 +20,7 @@ from random import randrange
 from const.const import cfg
 from jtag_axi.jtag_aux import reset_fsm, select_instruction
 from jtag_axi.jtag_aux import move_to_shift_dr, InstJTAG
-from jtag_axi.jtag_axi import SimJtagToAXI
+from jtag_axi.jtag_axi import SimJtagToAXI, JTAGToAXIStatus, JDRStatusAXI
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb.clock import Clock
 from cocotb.regression import TestFactory
@@ -31,6 +32,20 @@ from cocotbext.axi import AxiBus, AxiMaster, AxiRam
 
 CLK_100MHz = (10, "ns")
 TestFailure.__test__ = False
+
+
+def rnd_val(bit: int = 0, zero: bool = True):
+    if zero is True:
+        return random.randint(0, (2**bit) - 1)
+    else:
+        return random.randint(1, (2**bit) - 1)
+
+
+def pick_random_value(input_list):
+    if input_list:
+        return random.choice(input_list)
+    else:
+        return None  # Return None if the list is empty
 
 
 def bin_list_to_num(binary_list):
@@ -46,17 +61,79 @@ def convert_to_bin_list(value, bits):
     return [int(bit) for bit in bin_str]
 
 
-@cocotb.test()
-async def run_test(dut):
-    cocotb.start_soon(Clock(dut.clk_axi, *cfg.CLK_100MHz).start())
-    axi_ram = AxiRam(AxiBus.from_entity(dut), dut.clk_axi, dut.ares_axi, size=2**32)
+def cycle_pause():
+    return itertools.cycle([1, 1, 1, 0])
 
-    jtag = SimJtagToAXI(dut, freq=10e6, addr_width=32, data_width=32)
+
+@cocotb.test()
+async def run_test(dut, idle_generator=None, backpressure_generator=None):
+    N = 20
+    mem_size_kib = 10
+    data_width = 32
+    cocotb.start_soon(Clock(dut.clk_axi, *cfg.CLK_100MHz).start())
+    axi_ram = AxiRam(AxiBus.from_entity(dut), dut.clk_axi, dut.ares_axi,
+                     size=mem_size_kib*1024)
+
+    if idle_generator:
+        axi_ram.write_if.b_channel.set_pause_generator(idle_generator())
+        axi_ram.read_if.r_channel.set_pause_generator(idle_generator())
+
+    if backpressure_generator:
+        axi_ram.write_if.aw_channel.set_pause_generator(backpressure_generator())
+        axi_ram.write_if.w_channel.set_pause_generator(backpressure_generator())
+        axi_ram.read_if.ar_channel.set_pause_generator(backpressure_generator())
+
+    jtag = SimJtagToAXI(dut, freq=10e6, addr_width=32, data_width=data_width)
+
+    dut.ares_axi.value = 1
+    await ClockCycles(dut.clk_axi, 10)
+    dut.ares_axi.value = 0
 
     await jtag.reset()
-    await jtag.init_jdr()
-    await jtag._set_addr_axi(0xDEADBEEF)
-    await jtag._set_data_axi(0xBABEBABE)
+    await jtag.read_jdrs()
+
+    # Start test setup
+    address = random.sample(range(0, mem_size_kib * 1024, 8), N)
+    value = [rnd_val(data_width) for _ in range(N)]
+    if data_width == 32:
+        size = [pick_random_value([1, 2, 4]) for _ in range(N)]
+    else:
+        size = [pick_random_value([1, 2, 4, 8]) for _ in range(N)]
+    wstrb = [((1 << v) - 1) for v in size]
+
+    expected = []
+    for addr, val, sz in zip(address, value, size):
+        resp, data = 0, 0
+        if addr >= mem_size_kib * 1024:
+            resp = JTAGToAXIStatus.JTAG_AXI_SLVERR.value
+        else:
+            resp = JTAGToAXIStatus.JTAG_AXI_OKAY.value
+            if sz == 1:
+                data = val & 0xFF
+            elif sz == 2:
+                data = val & 0xFFFF
+            elif sz == 4:
+                data = val & 0xFFFFFFFF
+            elif sz == 8:
+                data = val & 0xFFFFFFFFFFFFFFFF
+        expected.append(JDRStatusAXI(data_rd=data, status=resp))
+
+    resp = []
+    # Perform the writes and reads
+    for addr, val, sz, strb in zip(address, value, size, wstrb):
+        await jtag.write_axi(addr, val, sz, strb)
+        resp.append(await jtag.read_axi(addr, sz))
+
+    # Compare all txns
+    for index, (real, expect) in enumerate(zip(resp, expected)):
+        if real != expect:
+            dut.log.error("------ERROR------")
+            dut.log.error(f"Txn ID: {index}")
+            dut.log.error("DUT")
+            dut.log.error(real)
+            dut.log.error("Expected")
+            dut.log.error(expect)
+            assert real == expect, "DUT != Expected"
 
 
 def test_axi():
@@ -89,18 +166,8 @@ def test_axi():
     )
 
 
-# if cocotb.SIM_NAME:
-    # factory = TestFactory(run_test)
-    # factory.add_option(
-        # "jtag_dr",
-        # [
-            # (InstJTAG.BYPASS, 1, AccessMode.RO, 0x1),
-            # (InstJTAG.IC_RESET, 4, AccessMode.RW, 0xf),
-            # (InstJTAG.IDCODE, 32, AccessMode.RO, 0xfff_ffff),
-            # (InstJTAG.ADDR_AXI_REG, 32, AccessMode.RW, 0xffff_ffff),
-            # (InstJTAG.DATA_W_AXI_REG, 32, AccessMode.RW, 0xffff_ffff),
-            # (InstJTAG.CTRL_AXI_REG, 8, AccessMode.RW, 0xc7),
-            # (InstJTAG.STATUS_AXI_REG, 35, AccessMode.RO, 0x1fffffffff),
-        # ],
-    # )
-    # factory.generate_tests()
+if cocotb.SIM_NAME:
+    factory = TestFactory(run_test)
+    factory.add_option("idle_generator", [None, cycle_pause])
+    factory.add_option("backpressure_generator", [None, cycle_pause])
+    factory.generate_tests()
