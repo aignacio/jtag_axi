@@ -5,6 +5,7 @@ package jtag_axi_pkg;
   import amba_axi_pkg::axi_size_t;
   import amba_axi_pkg::axi_addr_t;
   import amba_axi_pkg::axi_data_t;
+  import amba_axi_pkg::axi_wr_strb_t;
 
   localparam AXI_ASYNC_FIFO_DEPTH = 4; // Must be a power of 2
 
@@ -35,6 +36,7 @@ package jtag_axi_pkg;
     BYPASS          = 'b1111,
     ADDR_AXI_REG    = 'b0001,
     DATA_W_AXI_REG  = 'b0010,
+    WSTRB_AXI_REG   = 'b0011,
     CTRL_AXI_REG    = 'b0100,
     STATUS_AXI_REG  = 'b0101
   } ir_decoding_t;
@@ -80,6 +82,7 @@ package jtag_axi_pkg;
   typedef struct packed {
     axi_addr_t        addr;
     axi_data_t        data_wr;
+    axi_wr_strb_t     wstrb;
     s_axi_jtag_ctrl_t ctrl;
   } s_axi_jtag_info_t;
 
