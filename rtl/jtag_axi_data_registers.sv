@@ -3,11 +3,11 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 28.08.2024
- * Last Modified Date: 16.09.2024
+ * Last Modified Date: 17.09.2024
  */
 module jtag_axi_data_registers
   import jtag_axi_pkg::*;
-  import amba_axi_pkg::axi_addr_t;
+  import amba_axi_pkg::*;
 #(
   parameter [31:0]  IDCODE_VAL    = 'hBADC0FFE,
   parameter int     IC_RST_WIDTH  = 4
@@ -169,6 +169,21 @@ module jtag_axi_data_registers
           tdo = sr_n_ff[0];
         end
       end
+      WSTRB_AXI_REG: begin
+        if (tap_state == CAPTURE_DR) begin
+          next_sr[((`AXI_DATA_WIDTH/8)-1):0] = axi_info_ff.wstrb;
+        end
+        else if (tap_state == SHIFT_DR) begin
+          next_sr[((`AXI_DATA_WIDTH/8)-1):0] = {tdi,sr_ff[((`AXI_DATA_WIDTH/8)-1):1]};
+          tdo = sr_n_ff[0];
+        end
+        else if (tap_state == UPDATE_DR) begin
+          next_axi_info.wstrb = sr_ff[((`AXI_DATA_WIDTH/8)-1):0];
+        end
+        else if (tap_state == EXIT1_DR) begin
+          tdo = sr_n_ff[0];
+        end
+      end
       CTRL_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
           next_sr[($bits(s_axi_jtag_ctrl_t)-1):0] = axi_info_ff.ctrl;
@@ -180,7 +195,7 @@ module jtag_axi_data_registers
         else if (tap_state == UPDATE_DR) begin
           next_axi_info.ctrl = s_axi_jtag_ctrl_t'(sr_ff);
           next_axi_req = next_axi_info.ctrl.start;
-          next_axi_info.ctrl.start = 1'b0;
+          next_axi_info.ctrl.start = 1'b1;
         end
         else if (tap_state == EXIT1_DR) begin
           tdo = sr_n_ff[0];
@@ -207,22 +222,25 @@ module jtag_axi_data_registers
 
   always_ff @ (posedge tck or negedge trstn) begin
     if (trstn == 1'b0) begin
-      bypass_ff        <= 1'b0;
-      idcode_ff        <= '0;
-      sr_ff            <= '0;
-      axi_info_ff      <= s_axi_jtag_info_t'(0);
-      ic_rst_ff        <= '0;
-      axi_status_rd_ff <= 1'b0;
-      axi_req_ff       <= 1'b0;
+      bypass_ff           <= 1'b0;
+      idcode_ff           <= '0;
+      sr_ff               <= '0;
+      axi_info_ff.addr    <= axi_addr_t'('0);
+      axi_info_ff.data_wr <= axi_data_t'('0);
+      axi_info_ff.wstrb   <= '1;
+      axi_info_ff.ctrl    <= s_axi_jtag_ctrl_t'('0);
+      ic_rst_ff           <= '0;
+      axi_status_rd_ff    <= 1'b0;
+      axi_req_ff          <= 1'b0;
     end
     else begin
-      bypass_ff        <= next_bypass;
-      idcode_ff        <= next_idcode;
-      sr_ff            <= next_sr;
-      axi_info_ff      <= next_axi_info;
-      ic_rst_ff        <= next_ic_rst;
-      axi_status_rd_ff <= next_axi_status_rd;
-      axi_req_ff       <= next_axi_req;
+      bypass_ff           <= next_bypass;
+      idcode_ff           <= next_idcode;
+      sr_ff               <= next_sr;
+      axi_info_ff         <= next_axi_info;
+      ic_rst_ff           <= next_ic_rst;
+      axi_status_rd_ff    <= next_axi_status_rd;
+      axi_req_ff          <= next_axi_req;
     end
   end
 
