@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 25.08.2024
- * Last Modified Date: 11.09.2024
+ * Last Modified Date: 17.09.2024
  */
 module jtag_axi_tap_wrapper
   import jtag_axi_pkg::*;
@@ -50,8 +50,8 @@ module jtag_axi_tap_wrapper
   assign tdo  = (select_dr == 1'b0) ? tdo_ir : tdo_dr;
 
   jtag_axi_data_registers #(
-    .IDCODE_VAL   (IDCODE_VAL),
-    .IC_RST_WIDTH (IC_RST_WIDTH)
+    .IDCODE_VAL       (IDCODE_VAL),
+    .IC_RST_WIDTH     (IC_RST_WIDTH)
   ) u_data_registers (
     .trstn            (trstn),
     .tck              (tck),

@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 09.09.2024
- * Last Modified Date: 14.09.2024
+ * Last Modified Date: 17.09.2024
  */
 module jtag_axi_dispatch
   import amba_axi_pkg::*;
@@ -40,6 +40,7 @@ module jtag_axi_dispatch
   s_axi_jtag_status_t   axi_afifo_wr_resp;
   logic                 axi_afifo_wr_txn_full;
   axi_data_t            axi_afifo_wr_data;
+  axi_wr_strb_t         axi_afifo_wr_strb;
   logic                 axi_afifo_wr_data_rd_en;
   logic                 axi_afifo_wr_data_empty;
 
@@ -77,8 +78,8 @@ module jtag_axi_dispatch
   end
 
   cdc_async_fifo_w_ocup #(
-    .SLOTS  (AXI_ASYNC_FIFO_DEPTH),
-    .WIDTH  ($bits(s_axi_afifo_to_axi_t))
+    .SLOTS      (AXI_ASYNC_FIFO_DEPTH),
+    .WIDTH      ($bits(s_axi_afifo_to_axi_t))
   ) u_afifo_control_axi (
     // JTAG side
     .clk_wr     (tck),
@@ -95,28 +96,30 @@ module jtag_axi_dispatch
     .rd_empty_o (axi_afifo_rd_txn_empty)
   );
 
+  localparam W_CH_WIDTH = $bits(axi_data_t) + $bits(axi_wr_strb_t);
+
   cdc_async_fifo_w_ocup #(
-    .SLOTS  (AXI_ASYNC_FIFO_DEPTH),
-    .WIDTH  ($bits(axi_data_t))
+    .SLOTS      (AXI_ASYNC_FIFO_DEPTH),
+    .WIDTH      (W_CH_WIDTH)
   ) u_afifo_axi_wdata (
     // JTAG side
     .clk_wr     (tck),
     .arst_wr    (~trstn),
     .wr_en_i    (jtag_req_wr_data),
-    .wr_data_i  (axi_info_i.data_wr),
+    .wr_data_i  ({axi_info_i.data_wr, axi_info_i.wstrb}),
     .wr_full_o  (),
     .ocup_o     (),
     // AXI side
     .clk_rd     (clk),
     .arst_rd    (ares),
     .rd_en_i    (axi_afifo_wr_data_rd_en),
-    .rd_data_o  (axi_afifo_wr_data),
+    .rd_data_o  ({axi_afifo_wr_data, axi_afifo_wr_strb}),
     .rd_empty_o (axi_afifo_wr_data_empty)
   );
 
   cdc_async_fifo_w_ocup #(
-    .SLOTS  (AXI_ASYNC_FIFO_DEPTH),
-    .WIDTH  ($bits(s_axi_jtag_status_t))
+    .SLOTS      (AXI_ASYNC_FIFO_DEPTH),
+    .WIDTH      ($bits(s_axi_jtag_status_t))
   ) u_afifo_resp_axi (
     // AXI side
     .clk_wr     (clk),
@@ -146,6 +149,7 @@ module jtag_axi_dispatch
     // JTAG to AXI - Wr data
     .fifo_wr_data_txn_empty (axi_afifo_wr_data_empty),
     .fifo_wr_data           (axi_afifo_wr_data),
+    .fifo_wr_strb           (axi_afifo_wr_strb),
     .fifo_wr_data_en        (axi_afifo_wr_data_rd_en),
     // AXI to JTAG - Resp
     .fifo_wr_txn_full       (axi_afifo_wr_txn_full),

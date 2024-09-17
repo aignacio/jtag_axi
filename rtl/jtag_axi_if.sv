@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 11.09.2024
- * Last Modified Date: 14.09.2024
+ * Last Modified Date: 17.09.2024
  */
 module jtag_axi_if
   import amba_axi_pkg::*;
@@ -21,6 +21,7 @@ module jtag_axi_if
   // FIFO I/F - Incoming txn request - wr data
   input                         fifo_wr_data_txn_empty,
   input   axi_data_t            fifo_wr_data,
+  input   axi_wr_strb_t         fifo_wr_strb,
   output  logic                 fifo_wr_data_en,
   // FIFO I/F - Outgoing txn responses
   input                         fifo_wr_txn_full,
@@ -84,7 +85,7 @@ module jtag_axi_if
       // Write data path
       jtag_axi_mosi_o.wvalid = 1'b1;
       jtag_axi_mosi_o.wdata = fifo_wr_data;
-      jtag_axi_mosi_o.wstrb = '1;
+      jtag_axi_mosi_o.wstrb = fifo_wr_strb;
       jtag_axi_mosi_o.wlast = 1'b1;
       fifo_wr_data_en = jtag_axi_miso_i.wready;
     end : w_axi
