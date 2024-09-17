@@ -195,7 +195,6 @@ module jtag_axi_data_registers
         else if (tap_state == UPDATE_DR) begin
           next_axi_info.ctrl = s_axi_jtag_ctrl_t'(sr_ff);
           next_axi_req = next_axi_info.ctrl.start;
-          next_axi_info.ctrl.start = 1'b1;
         end
         else if (tap_state == EXIT1_DR) begin
           tdo = sr_n_ff[0];
