@@ -3,17 +3,20 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 11.09.2024
- * Last Modified Date: 17.09.2024
+ * Last Modified Date: 18.09.2024
  */
 module jtag_axi_if
   import amba_axi_pkg::*;
   import jtag_axi_pkg::*;
 #(
-  parameter int AXI_MASTER_ID = 0
+  parameter int AXI_MASTER_ID  = 0,
+  parameter int AXI_TIMEOUT_CC = 4096 
 )(
+  input                         tck,
+  input                         trstn,
   input                         clk,
   input                         ares,
-  output  logic                 axi_timeout_o,
+  output  logic                 timeout_jtag_o,
   // FIFO I/F - Incoming txn request
   input                         fifo_rd_txn_empty,
   input   s_axi_afifo_to_axi_t  fifo_rd_txn,
@@ -36,14 +39,22 @@ module jtag_axi_if
     AXI_WRITE_OP
   } int_op_type_t;
 
-  logic         fifo_wr_en_addr_op;
-  logic         fifo_rd_en_addr_op;
-  logic         fifo_empty_addr_op;
-  logic         fifo_full_addr_op;
+  logic fifo_wr_en_addr_op;
+  logic fifo_rd_en_addr_op;
+  logic fifo_empty_addr_op;
+  logic fifo_full_addr_op;
+
+  logic aw_timeout;
+  logic ar_timeout;
+  logic w_timeout;
+  logic b_timeout;
+  logic r_timeout;
+  logic timeout_axi;
+  logic timeout_axi_ff;
+
   int_op_type_t op_type_in, op_type_out;
 
   always_comb begin
-    axi_timeout_o = 1'b0;
     jtag_axi_mosi_o = s_axi_mosi_t'('0);
     fifo_rd_en = 1'b0;
     fifo_wr_resp = s_axi_jtag_status_t'('0);
@@ -126,6 +137,21 @@ module jtag_axi_if
       jtag_axi_mosi_o.rready = 1'b0;
       jtag_axi_mosi_o.bready = 1'b0;
     end
+
+    timeout_axi = aw_timeout |
+                  ar_timeout |
+                  w_timeout  |
+                  b_timeout  |
+                  r_timeout;
+  end
+
+  always_ff @ (posedge clk or posedge ares) begin
+    if (ares) begin
+      timeout_axi_ff <= 1'b0;
+    end
+    else begin
+      timeout_axi_ff <= timeout_axi;
+    end
   end
 
   jtag_axi_fifo #(
@@ -145,5 +171,60 @@ module jtag_axi_if
     .ocup_o   ()
   );
 
-endmodule
+  jtag_axi_timeout #(
+    .TIMEOUT_CLK_CYCLES (AXI_TIMEOUT_CC)
+  ) u_aw_timeout (
+    .clk      (clk),
+    .ares     (ares),
+    .valid    (jtag_axi_mosi_o.awvalid),
+    .ready    (jtag_axi_miso_i.awready),
+    .timeout  (aw_timeout)
+  );
 
+  jtag_axi_timeout #(
+    .TIMEOUT_CLK_CYCLES (AXI_TIMEOUT_CC)
+  ) u_ar_timeout (
+    .clk      (clk),
+    .ares     (ares),
+    .valid    (jtag_axi_mosi_o.arvalid),
+    .ready    (jtag_axi_miso_i.arready),
+    .timeout  (ar_timeout)
+  );
+
+  jtag_axi_timeout #(
+    .TIMEOUT_CLK_CYCLES (AXI_TIMEOUT_CC)
+  ) u_w_timeout (
+    .clk      (clk),
+    .ares     (ares),
+    .valid    (jtag_axi_mosi_o.wvalid),
+    .ready    (jtag_axi_miso_i.wready),
+    .timeout  (w_timeout)
+  );
+
+  jtag_axi_timeout #(
+    .TIMEOUT_CLK_CYCLES (AXI_TIMEOUT_CC)
+  ) u_b_timeout (
+    .clk      (clk),
+    .ares     (ares),
+    .valid    (jtag_axi_miso_i.bvalid),
+    .ready    (jtag_axi_mosi_o.bready),
+    .timeout  (b_timeout)
+  );
+
+  jtag_axi_timeout #(
+    .TIMEOUT_CLK_CYCLES (AXI_TIMEOUT_CC)
+  ) u_r_timeout (
+    .clk      (clk),
+    .ares     (ares),
+    .valid    (jtag_axi_miso_i.rvalid),
+    .ready    (jtag_axi_mosi_o.rready),
+    .timeout  (r_timeout)
+  );
+
+  cdc_2ff_sync u_2ff_timeout (
+    .clk_sync    (tck),
+    .arst_master (~trstn),
+    .async_i     (timeout_axi_ff),
+    .sync_o      (timeout_jtag_o)
+  );
+endmodule

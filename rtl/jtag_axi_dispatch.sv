@@ -3,13 +3,14 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 09.09.2024
- * Last Modified Date: 17.09.2024
+ * Last Modified Date: 18.09.2024
  */
 module jtag_axi_dispatch
   import amba_axi_pkg::*;
   import jtag_axi_pkg::*;
 #(
-  parameter int AXI_MASTER_ID = 0
+  parameter int AXI_MASTER_ID  = 0,
+  parameter int AXI_TIMEOUT_CC = 4096 
 )(
   input                       clk,
   input                       ares,
@@ -137,11 +138,14 @@ module jtag_axi_dispatch
   );
 
   jtag_axi_if #(
-    .AXI_MASTER_ID          (AXI_MASTER_ID)
+    .AXI_MASTER_ID          (AXI_MASTER_ID),
+    .AXI_TIMEOUT_CC         (AXI_TIMEOUT_CC)
   ) u_jtag_axi_if (
+    .tck                    (tck),
+    .trstn                  (~trstn),
     .clk                    (clk),
     .ares                   (ares),
-    .axi_timeout_o          (jtag_axi_timeout),
+    .timeout_jtag_o         (jtag_axi_timeout),
     // JTAG to AXI - CTRL signals
     .fifo_rd_txn_empty      (axi_afifo_rd_txn_empty),
     .fifo_rd_txn            (axi_afifo_rd_txn),
