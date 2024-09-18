@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 17.09.2024
+# Last Modified Date: 18.09.2024
 import cocotb
 import logging
 import pytest
@@ -27,7 +27,8 @@ from cocotb.regression import TestFactory
 from cocotb.result import TestFailure
 from cocotb.runner import get_runner
 from enum import Enum
-from cocotbext.axi import AxiBus, AxiMaster, AxiRam
+from cocotbext.axi import AddressSpace, SparseMemoryRegion
+from cocotbext.axi import AxiBus, AxiLiteMaster, AxiSlave
 
 
 CLK_100MHz = (10, "ns")
@@ -71,8 +72,14 @@ async def run_test(dut, idle_generator=None, backpressure_generator=None):
     mem_size_kib = 10
     data_width = 32
     cocotb.start_soon(Clock(dut.clk_axi, *cfg.CLK_100MHz).start())
-    axi_ram = AxiRam(AxiBus.from_entity(dut), dut.clk_axi, dut.ares_axi,
-                     size=mem_size_kib*1024)
+    # axi_ram = AxiRam(AxiBus.from_entity(dut), dut.clk_axi, dut.ares_axi,
+                     # size=mem_size_kib*1024)
+
+    address_space = AddressSpace(mem_size_kib*1024)
+    ram = SparseMemoryRegion(mem_size_kib*1024)
+    address_space.register_region(ram, 0x0000_0000)
+    ram_pool = address_space.create_window_pool(0x0000_0000, mem_size_kib*1024)
+    axi_ram = AxiSlave(AxiBus.from_entity(dut), dut.clk_axi, dut.ares_axi, target=address_space)
 
     if idle_generator:
         axi_ram.write_if.b_channel.set_pause_generator(idle_generator())
@@ -93,7 +100,7 @@ async def run_test(dut, idle_generator=None, backpressure_generator=None):
     await jtag.read_jdrs()
 
     # Start test setup
-    address = random.sample(range(0, mem_size_kib * 1024, 8), N)
+    address = random.sample(range(0, 2 * mem_size_kib * 1024, 8), N)
     value = [rnd_val(data_width) for _ in range(N)]
     if data_width == 32:
         size = [pick_random_value([1, 2, 4]) for _ in range(N)]
