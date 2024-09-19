@@ -68,7 +68,14 @@ module jtag_axi_wrapper_tb
   input   logic                               rlast,
   input   logic [`AXI_USER_REQ_WIDTH-1:0]     ruser,
   input   logic                               rvalid,
-  output  logic                               rready
+  output  logic                               rready,
+
+  //Timeout
+  input   logic                               to_awready,
+  input   logic                               to_arready,
+  input   logic                               to_wready,
+  input   logic                               to_bvalid,
+  input   logic                               to_rvalid
 );
 
   // Declare the AXI interfaces as packed structs
@@ -88,19 +95,19 @@ module jtag_axi_wrapper_tb
   assign awregion                = jtag_axi_mosi_o.awregion;
   assign awuser                  = jtag_axi_mosi_o.awuser;
   assign awvalid                 = jtag_axi_mosi_o.awvalid;
-  assign jtag_axi_miso_i.awready = awready;
+  assign jtag_axi_miso_i.awready = to_awready ? 1'b0 : awready;
 
   assign wdata                   = jtag_axi_mosi_o.wdata;
   assign wstrb                   = jtag_axi_mosi_o.wstrb;
   assign wlast                   = jtag_axi_mosi_o.wlast;
   assign wuser                   = jtag_axi_mosi_o.wuser;
   assign wvalid                  = jtag_axi_mosi_o.wvalid;
-  assign jtag_axi_miso_i.wready  = wready;
+  assign jtag_axi_miso_i.wready  = to_wready ? 1'b0 : wready;
 
   assign jtag_axi_miso_i.bid     = bid;
   assign jtag_axi_miso_i.bresp   = axi_resp_t'(bresp);
   assign jtag_axi_miso_i.buser   = buser;
-  assign jtag_axi_miso_i.bvalid  = bvalid;
+  assign jtag_axi_miso_i.bvalid  = to_bvalid | to_wready ? 1'b0 : bvalid;
   assign bready                  = jtag_axi_mosi_o.bready;
 
   assign arid                    = jtag_axi_mosi_o.arid;
@@ -115,14 +122,14 @@ module jtag_axi_wrapper_tb
   assign arregion                = jtag_axi_mosi_o.arregion;
   assign aruser                  = jtag_axi_mosi_o.aruser;
   assign arvalid                 = jtag_axi_mosi_o.arvalid;
-  assign jtag_axi_miso_i.arready = arready;
+  assign jtag_axi_miso_i.arready = to_arready ? 1'b0 : arready;
 
   assign jtag_axi_miso_i.rid     = rid;
   assign jtag_axi_miso_i.rdata   = rdata;
   assign jtag_axi_miso_i.rresp   = axi_resp_t'(rresp);
   assign jtag_axi_miso_i.rlast   = rlast;
   assign jtag_axi_miso_i.ruser   = ruser;
-  assign jtag_axi_miso_i.rvalid  = rvalid;
+  assign jtag_axi_miso_i.rvalid  = to_rvalid ? 1'b0 : rvalid;
   assign rready                  = jtag_axi_mosi_o.rready;
 
   // Instantiate the original jtag_axi_if module, passing the separated AXI signals
