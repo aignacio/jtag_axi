@@ -3,10 +3,9 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 18.09.2024
- * Last Modified Date: 18.09.2024
+ * Last Modified Date: 19.09.2024
  */
 module jtag_axi_timeout
-  import amba_axi_pkg::*;
 #(
   parameter int TIMEOUT_CLK_CYCLES = 4096
 )(
