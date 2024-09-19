@@ -3,14 +3,14 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 11.09.2024
- * Last Modified Date: 18.09.2024
+ * Last Modified Date: 19.09.2024
  */
 module jtag_axi_if
   import amba_axi_pkg::*;
   import jtag_axi_pkg::*;
 #(
   parameter int AXI_MASTER_ID  = 0,
-  parameter int AXI_TIMEOUT_CC = 4096 
+  parameter int AXI_TIMEOUT_CC = 4096
 )(
   input                         tck,
   input                         trstn,
@@ -206,8 +206,8 @@ module jtag_axi_if
   ) u_b_timeout (
     .clk      (clk),
     .ares     (ares),
-    .valid    (jtag_axi_miso_i.bvalid),
-    .ready    (jtag_axi_mosi_o.bready),
+    .valid    (jtag_axi_mosi_o.bready),
+    .ready    (jtag_axi_miso_i.bvalid),
     .timeout  (b_timeout)
   );
 
@@ -216,8 +216,8 @@ module jtag_axi_if
   ) u_r_timeout (
     .clk      (clk),
     .ares     (ares),
-    .valid    (jtag_axi_miso_i.rvalid),
-    .ready    (jtag_axi_mosi_o.rready),
+    .valid    (jtag_axi_mosi_o.rready),
+    .ready    (jtag_axi_miso_i.rvalid),
     .timeout  (r_timeout)
   );
 
