@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 09.09.2024
- * Last Modified Date: 18.09.2024
+ * Last Modified Date: 19.09.2024
  */
 module jtag_axi_dispatch
   import amba_axi_pkg::*;
@@ -28,6 +28,7 @@ module jtag_axi_dispatch
 );
   s_axi_afifo_to_axi_t  jtag_fifo_in;
   axi_afifo_t           jtag_fifo_slots;
+  logic                 jtag_fifo_wr_full;
   s_axi_jtag_status_t   jtag_fifo_resp;
   logic                 jtag_fifo_resp_empty;
   logic                 jtag_fifo_rd;
@@ -44,6 +45,7 @@ module jtag_axi_dispatch
   axi_wr_strb_t         axi_afifo_wr_strb;
   logic                 axi_afifo_wr_data_rd_en;
   logic                 axi_afifo_wr_data_empty;
+  axi_afifo_t           ot_cnt_ff, next_ot_cnt;
 
   always_comb begin
     afifo_slots_o = jtag_fifo_slots;
@@ -67,7 +69,7 @@ module jtag_axi_dispatch
         jtag_status_o.status  = jtag_fifo_resp.status;
         jtag_status_o.data_rd = jtag_fifo_resp.data_rd;
       end
-      (jtag_fifo_slots > 0): begin
+      (ot_cnt_ff > 0): begin
         jtag_status_o.status = JTAG_RUNNING;
         jtag_status_o.data_rd = axi_data_t'('0);
       end
@@ -76,6 +78,20 @@ module jtag_axi_dispatch
         jtag_status_o.data_rd = axi_data_t'('0);
       end
     endcase
+  end
+
+  always_comb begin
+    next_ot_cnt = ot_cnt_ff + ((jtag_req_new & ~jtag_fifo_wr_full) ? 'd1 : 'd0) -
+                              ((jtag_fifo_rd & ~jtag_fifo_resp_empty) ? 'd1 : 'd0);
+  end
+
+  always_ff @ (posedge tck or negedge trstn) begin
+    if (~trstn) begin
+      ot_cnt_ff <= axi_afifo_t'('0);
+    end
+    else begin
+      ot_cnt_ff <= next_ot_cnt;
+    end
   end
 
   cdc_async_fifo_w_ocup #(
@@ -87,7 +103,7 @@ module jtag_axi_dispatch
     .arst_wr    (~trstn),
     .wr_en_i    (jtag_req_new),
     .wr_data_i  (jtag_fifo_in),
-    .wr_full_o  (),
+    .wr_full_o  (jtag_fifo_wr_full),
     .ocup_o     (jtag_fifo_slots),
     // AXI side
     .clk_rd     (clk),
@@ -142,7 +158,7 @@ module jtag_axi_dispatch
     .AXI_TIMEOUT_CC         (AXI_TIMEOUT_CC)
   ) u_jtag_axi_if (
     .tck                    (tck),
-    .trstn                  (~trstn),
+    .trstn                  (trstn),
     .clk                    (clk),
     .ares                   (ares),
     .timeout_jtag_o         (jtag_axi_timeout),
