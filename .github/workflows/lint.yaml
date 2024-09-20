@@ -5,15 +5,16 @@ on:
     branches:
       - main
       - 'stable/**'
-  pull_request:
-    branches:
-      - main
-      - 'stable/**'
+  #pull_request:
+    #branches:
+      #- main
+      #- 'stable/**'
 
 jobs:
   lint:
     name: Run lint
-    runs-on: ubuntu-22.04
+    runs-on: self-hosted
+      #runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
       with:
