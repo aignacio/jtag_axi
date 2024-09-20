@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 15.09.2024
+# Last Modified Date: 20.09.2024
 import cocotb
 import logging
 import pytest
@@ -17,7 +17,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from pathlib import Path
 from random import randrange
 from const.const import cfg
-from jtag_axi.jtag_aux import JTAGFSM, JTAGState
+from jtag_axi.jtag_base import JTAGState
 from cocotb.triggers import ClockCycles, Timer
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
@@ -56,6 +56,90 @@ def pick_random_value(input_list):
 def get_tms():
     while True:
         yield pick_random_value([0, 1])
+
+# JTAG FSM Model
+class JTAGFSM:
+    def __init__(self):
+        self.state = JTAGState.TEST_LOGIC_RESET
+
+    @property
+    def fsm(self):
+        return self.state
+
+    def reset(self):
+        self.state = JTAGState.TEST_LOGIC_RESET
+
+    def transition(self, tms):
+        if self.state == JTAGState.TEST_LOGIC_RESET:
+            if tms == 0:
+                self.state = JTAGState.RUN_TEST_IDLE
+        elif self.state == JTAGState.RUN_TEST_IDLE:
+            if tms == 1:
+                self.state = JTAGState.SELECT_DR_SCAN
+        elif self.state == JTAGState.SELECT_DR_SCAN:
+            if tms == 0:
+                self.state = JTAGState.CAPTURE_DR
+            else:
+                self.state = JTAGState.SELECT_IR_SCAN
+        elif self.state == JTAGState.CAPTURE_DR:
+            if tms == 0:
+                self.state = JTAGState.SHIFT_DR
+            else:
+                self.state = JTAGState.EXIT1_DR
+        elif self.state == JTAGState.SHIFT_DR:
+            if tms == 1:
+                self.state = JTAGState.EXIT1_DR
+        elif self.state == JTAGState.EXIT1_DR:
+            if tms == 0:
+                self.state = JTAGState.PAUSE_DR
+            else:
+                self.state = JTAGState.UPDATE_DR
+        elif self.state == JTAGState.PAUSE_DR:
+            if tms == 1:
+                self.state = JTAGState.EXIT2_DR
+        elif self.state == JTAGState.EXIT2_DR:
+            if tms == 0:
+                self.state = JTAGState.SHIFT_DR
+            else:
+                self.state = JTAGState.UPDATE_DR
+        elif self.state == JTAGState.UPDATE_DR:
+            if tms == 0:
+                self.state = JTAGState.RUN_TEST_IDLE
+            else:
+                self.state = JTAGState.SELECT_DR_SCAN
+        elif self.state == JTAGState.SELECT_IR_SCAN:
+            if tms == 0:
+                self.state = JTAGState.CAPTURE_IR
+            else:
+                self.state = JTAGState.TEST_LOGIC_RESET
+        elif self.state == JTAGState.CAPTURE_IR:
+            if tms == 0:
+                self.state = JTAGState.SHIFT_IR
+            else:
+                self.state = JTAGState.EXIT1_IR
+        elif self.state == JTAGState.SHIFT_IR:
+            if tms == 1:
+                self.state = JTAGState.EXIT1_IR
+        elif self.state == JTAGState.EXIT1_IR:
+            if tms == 0:
+                self.state = JTAGState.PAUSE_IR
+            else:
+                self.state = JTAGState.UPDATE_IR
+        elif self.state == JTAGState.PAUSE_IR:
+            if tms == 1:
+                self.state = JTAGState.EXIT2_IR
+        elif self.state == JTAGState.EXIT2_IR:
+            if tms == 0:
+                self.state = JTAGState.SHIFT_IR
+            else:
+                self.state = JTAGState.UPDATE_IR
+        elif self.state == JTAGState.UPDATE_IR:
+            if tms == 0:
+                self.state = JTAGState.RUN_TEST_IDLE
+            else:
+                self.state = JTAGState.SELECT_DR_SCAN
+        else:
+            self.state = JTAGState.TEST_LOGIC_RESET
 
 
 @cocotb.test()

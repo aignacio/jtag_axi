@@ -4,33 +4,13 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 15.09.2024
-# Last Modified Date: 17.09.2024
+# Last Modified Date: 20.09.2024
 import os
 from abc import abstractmethod
-from .jtag_aux import JTAGState, InstJTAG
+from .jtag_base import *
 from cocotb.triggers import ClockCycles, Timer
 from cocotb.handle import SimHandleBase
 from enum import Enum
-
-
-_AXI_ADDR_WIDTH = 32
-_AXI_DATA_WIDTH = 32
-
-
-def bits_to_ff_hex(num_bits):
-    """
-    Converts the given number of bits to a single integer with each byte filled with 0xFF.
-
-    :param num_bits: The number of bits.
-    :return: An integer representing the value filled with 0xFF per byte.
-    """
-    # Calculate the number of bytes needed (each byte is 8 bits)
-    num_bytes = (num_bits + 7) // 8  # Add 7 to round up to the nearest byte
-
-    # Create the integer value where all bits are set to 1 for the given number of bytes
-    ff_value = (1 << (num_bytes * 8)) - 1
-
-    return ff_value
 
 
 def bin_to_num(binary_list):
@@ -44,116 +24,6 @@ def bin_list(value, bits):
     bin_str = bin(value & ((1 << bits) - 1))[2:].zfill(bits)
     # Convert the string representation of the binary number to a list of integers
     return [int(bit) for bit in bin_str]
-
-
-class AXISize(Enum):
-    AXI_BYTE = 0
-    AXI_HALF_WORD = 1
-    AXI_WORD = 2
-    AXI_DWORD = 3
-    AXI_BYTES_16 = 4
-    AXI_BYTES_32 = 5
-    AXI_BYTES_64 = 6
-    AXI_BYTES_128 = 7
-
-
-class TxnType(Enum):
-    AXI_READ = 0
-    AXI_WRITE = 1
-
-
-class JDRCtrlAXI:
-    def __init__(
-        self,
-        start=0,
-        txn_type=TxnType.AXI_READ,
-        fifo_ocup=0,
-        size_axi=AXISize.AXI_BYTE,
-    ):
-        self.start = start & 0x1  # 1 bit
-        self.txn_type = txn_type  # 1 bit
-        self.fifo_ocup = fifo_ocup & 0x7  # 3 bits
-        self.size_axi = size_axi  # 3 bits
-
-    def get_jdr(self):
-        """
-        Packs the fields into an 8-bit register and returns the formatted value.
-        | START [7] | TXN TYPE [6] | fifo_ocup [5:3] | SIZE_AXI [2:0] |
-        """
-        jdr = (
-            (self.start << 7)
-            | (self.txn_type.value << 6)
-            | (self.fifo_ocup << 3)
-            | (self.size_axi.value)
-        )
-        return jdr
-
-    @classmethod
-    def from_jdr(cls, jdr_value):
-        """
-        Takes an 8-bit value and decodes it into the class attributes.
-        """
-        start = (jdr_value >> 7) & 0x1
-        txn_type = TxnType((jdr_value >> 6) & 0x1)
-        fifo_ocup = (jdr_value >> 3) & 0x7
-        size_axi = AXISize(jdr_value & 0x7)
-        return cls(
-            start=start, txn_type=txn_type, fifo_ocup=fifo_ocup, size_axi=size_axi
-        )
-
-    def __str__(self):
-        return (
-            f"START: {self.start}, TXN_TYPE: {self.txn_type.name}, "
-            f"fifo_ocup: {self.fifo_ocup}, SIZE_AXI: {self.size_axi.name}"
-        )
-
-
-class JTAGToAXIStatus(Enum):
-    JTAG_IDLE = 0
-    JTAG_RUNNING = 1
-    JTAG_TIMEOUT = 2
-    JTAG_AXI_OKAY = 3
-    JTAG_AXI_EXOKAY = 4
-    JTAG_AXI_SLVERR = 5
-    JTAG_AXI_DECERR = 6
-
-
-class JDRStatusAXI:
-    def __init__(
-        self,
-        data_rd=0,
-        status=0,
-    ):
-        self.data_rd = data_rd & bits_to_ff_hex(_AXI_DATA_WIDTH)
-        self.status = JTAGToAXIStatus(status & 0x7)  # 3 bit
-
-    def get_jdr(self):
-        """
-        Packs the fields into an 35-bit register and returns the formatted value.
-        | DATA_RD [(_AXI_ADDR_WIDTH+33-1):3] | STATUS [2:0] |
-        """
-        jdr = (self.data_rd << 3) | (self.status.value << 0)
-        return jdr
-
-    @classmethod
-    def from_jdr(cls, jdr_value):
-        """
-        Takes an 35-bit value and decodes it into the class attributes.
-        """
-        data_rd_new = (jdr_value >> 3) & bits_to_ff_hex(_AXI_DATA_WIDTH)
-        status_new = jdr_value & 0x7
-        return cls(data_rd=data_rd_new, status=status_new)
-
-    def __str__(self):
-        return f"DATA RD: {hex(self.data_rd)}, STATUS: {self.status}"
-
-    def __eq__(self, other):
-        if isinstance(other, JDRStatusAXI):
-            return (
-                self.data_rd == other.data_rd
-                and self.status == other.status
-            )
-        return False
 
 
 class BaseJtagToAXI:
@@ -172,47 +42,6 @@ class BaseJtagToAXI:
         self.status_axi_jdr = 0
         self.tap_state = JTAGState.TEST_LOGIC_RESET
 
-    @abstractmethod
-    def write_axi(self, addr, data, size):
-        """Send data through JTAG."""
-        pass
-
-    @abstractmethod
-    def read_axi(self, addr, size):
-        """Read data from JTAG."""
-        pass
-
-    @abstractmethod
-    def reset(self):
-        """Reset the JTAG interface."""
-        pass
-
-    @abstractmethod
-    def write_read_ic_reset(self):
-        """Write IC Reset a value."""
-        pass
-
-    @abstractmethod
-    def _get_idcode(self):
-        """Get JTAG IDCODE."""
-        pass
-
-
-class SimJtagToAXI(BaseJtagToAXI):
-    def __init__(
-        self,
-        dut: SimHandleBase = None,
-        freq: int = 1e6,
-        name: str = "JTAG to AXI IP",
-        **kwargs,
-    ):
-        """Initialize the DUT JTAG interface."""
-        self.dut = dut
-        self.freq_period = (1 / freq) * 1e9
-
-        super().__init__(**kwargs)
-
-        # Define the state transition table:
         # {current_state: {next_state: [TMS_sequence]}}
         self.state_transitions = {
             JTAGState.TEST_LOGIC_RESET: {
@@ -275,6 +104,47 @@ class SimJtagToAXI(BaseJtagToAXI):
                 JTAGState.SELECT_DR_SCAN: [1],
             },
         }
+
+
+    @abstractmethod
+    def write_axi(self, addr, data, size):
+        """Send data through JTAG."""
+        pass
+
+    @abstractmethod
+    def read_axi(self, addr, size):
+        """Read data from JTAG."""
+        pass
+
+    @abstractmethod
+    def reset(self):
+        """Reset the JTAG interface."""
+        pass
+
+    @abstractmethod
+    def write_read_ic_reset(self):
+        """Write IC Reset a value."""
+        pass
+
+    @abstractmethod
+    def _get_idcode(self):
+        """Get JTAG IDCODE."""
+        pass
+
+
+class SimJtagToAXI(BaseJtagToAXI):
+    def __init__(
+        self,
+        dut: SimHandleBase = None,
+        freq: int = 1e6,
+        name: str = "JTAG to AXI IP",
+        **kwargs,
+    ):
+        """Initialize the DUT JTAG interface."""
+        self.dut = dut
+        self.freq_period = (1 / freq) * 1e9
+
+        super().__init__(**kwargs)
 
         dut.log.info("------------------------------")
         dut.log.info("|=> JTAG Interface created <=|")
