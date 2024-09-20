@@ -21,9 +21,9 @@ jobs:
         submodules: 'recursive'
     - name: Install dependencies
       run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
         sudo apt-get update
         sudo apt-get install -y g++-13 cmake python3
+        #sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     - name: Install slang
       run: |
         git clone https://github.com/MikePopoloski/slang.git
