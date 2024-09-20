@@ -34,6 +34,6 @@ jobs:
         make -j$(nproc)
         sudo make install
     - name: Install nox
-      run: pip install --upgrade nox
+      run: pip install --upgrade nox --break-system-packages
     - name: Run Lint
       run: nox -s "sv_lint"
