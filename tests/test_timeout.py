@@ -67,10 +67,17 @@ def cycle_pause():
 
 
 @cocotb.test()
-async def run_test(dut, idle_generator=None, backpressure_generator=None):
+async def run_test(dut, idle_generator=None, backpressure_generator=None, timeout=None):
     N = 1
     mem_size_kib = 10
     data_width = 32
+
+    dut.to_awready.value = 0
+    dut.to_arready.value = 0
+    dut.to_wready.value = 0
+    dut.to_rvalid.value = 0
+    dut.to_bvalid.value = 0
+
     cocotb.start_soon(Clock(dut.clk_axi, *cfg.CLK_100MHz).start())
 
     address_space = AddressSpace(mem_size_kib * 1024)
@@ -99,9 +106,26 @@ async def run_test(dut, idle_generator=None, backpressure_generator=None):
     await jtag.reset()
     await jtag.read_jdrs()
 
-    timeout_dut = random.choice(
-        [dut.to_awready, dut.to_arready, dut.to_wready, dut.to_rvalid, dut.to_bvalid]
-    )
+    if timeout == None:
+        timeout_dut = random.choice(
+            [
+                dut.to_awready,
+                dut.to_arready,
+                dut.to_wready,
+                dut.to_rvalid,
+                dut.to_bvalid,
+            ]
+        )
+    elif timeout == "awready":
+        timeout_dut = dut.to_awready
+    elif timeout == "arready":
+        timeout_dut = dut.to_arready
+    elif timeout == "wready":
+        timeout_dut = dut.to_wready
+    elif timeout == "rvalid":
+        timeout_dut = dut.to_rvalid
+    elif timeout == "bvalid":
+        timeout_dut = dut.to_bvalid
 
     dut.log.info(f"{timeout_dut._name} was randomly selected and forced to 0.")
     # Verilator does not support force =/
@@ -172,4 +196,5 @@ if cocotb.SIM_NAME:
     factory = TestFactory(run_test)
     factory.add_option("idle_generator", [None, cycle_pause])
     factory.add_option("backpressure_generator", [None, cycle_pause])
+    factory.add_option("timeout", ["awready", "arready", "wready", "rvalid", "bvalid"])
     factory.generate_tests()
