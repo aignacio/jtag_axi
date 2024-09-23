@@ -44,14 +44,18 @@ package jtag_axi_pkg;
   // --------------------------
   //|  JTAG AXI structs/types  |
   // --------------------------
-  typedef enum logic [2:0] {
+  typedef enum logic [3:0] {
     JTAG_IDLE        = 'd0,
     JTAG_RUNNING     = 'd1,
-    JTAG_TIMEOUT     = 'd2,
-    JTAG_AXI_OKAY    = 'd3,
-    JTAG_AXI_EXOKAY  = 'd4,
-    JTAG_AXI_SLVERR  = 'd5,
-    JTAG_AXI_DECERR  = 'd6
+    JTAG_TIMEOUT_AR  = 'd2,
+    JTAG_TIMEOUT_R   = 'd3,
+    JTAG_TIMEOUT_AW  = 'd4,
+    JTAG_TIMEOUT_W   = 'd5,
+    JTAG_TIMEOUT_B   = 'd6,
+    JTAG_AXI_OKAY    = 'd7,
+    JTAG_AXI_EXOKAY  = 'd8,
+    JTAG_AXI_SLVERR  = 'd9,
+    JTAG_AXI_DECERR  = 'd10
   } axi_jtag_status_t;
 
   typedef enum logic {

@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 20.09.2024
+# Last Modified Date: 23.09.2024
 import cocotb
 import logging
 import pytest
@@ -125,7 +125,13 @@ async def run_test(dut, idle_generator=None, backpressure_generator=None):
         resp.append(await jtag.read_axi(addr, sz))
 
     for ret in resp:
-        if ret.status == JTAGToAXIStatus.JTAG_TIMEOUT:
+        if ret.status in [
+            JTAGToAXIStatus.JTAG_TIMEOUT_AR,
+            JTAGToAXIStatus.JTAG_TIMEOUT_R,
+            JTAGToAXIStatus.JTAG_TIMEOUT_AW,
+            JTAGToAXIStatus.JTAG_TIMEOUT_W,
+            JTAGToAXIStatus.JTAG_TIMEOUT_B,
+        ]:
             raise TestSuccess("Timeout detected!")
     raise TestFailure("Expected timeout to be triggered!")
 

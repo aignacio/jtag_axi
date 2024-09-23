@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 20.09.2024
-# Last Modified Date: 20.09.2024
+# Last Modified Date: 23.09.2024
 from enum import Enum
 
 
@@ -28,7 +28,7 @@ class InstJTAG(Enum):
     ADDR_AXI_REG = ("0b0001", 32, AccessMode.RW, 0xFFFF_FFFF)
     DATA_W_AXI_REG = ("0b0010", 32, AccessMode.RW, 0xFFFF_FFFF)
     CTRL_AXI_REG = ("0b0100", 8, AccessMode.RW, 0xC7)
-    STATUS_AXI_REG = ("0b0101", 35, AccessMode.RO, 0xFFFF_FFFF)
+    STATUS_AXI_REG = ("0b0101", 36, AccessMode.RO, 0xF_FFFF_FFFF)
     WSTRB_AXI_REG = ("0b0011", 4, AccessMode.RW, 0xF)
 
 
@@ -117,11 +117,15 @@ class JDRCtrlAXI:
 class JTAGToAXIStatus(Enum):
     JTAG_IDLE = 0
     JTAG_RUNNING = 1
-    JTAG_TIMEOUT = 2
-    JTAG_AXI_OKAY = 3
-    JTAG_AXI_EXOKAY = 4
-    JTAG_AXI_SLVERR = 5
-    JTAG_AXI_DECERR = 6
+    JTAG_TIMEOUT_AR = 2
+    JTAG_TIMEOUT_R = 3
+    JTAG_TIMEOUT_AW = 4
+    JTAG_TIMEOUT_W = 5
+    JTAG_TIMEOUT_B = 6
+    JTAG_AXI_OKAY = 7
+    JTAG_AXI_EXOKAY = 8
+    JTAG_AXI_SLVERR = 9
+    JTAG_AXI_DECERR = 10
 
 
 def bits_to_ff_hex(num_bits):
@@ -141,23 +145,23 @@ class JDRStatusAXI:
         status=0,
     ):
         self.data_rd = data_rd & bits_to_ff_hex(_AXI_DATA_WIDTH)
-        self.status = JTAGToAXIStatus(status & 0x7)  # 3 bit
+        self.status = JTAGToAXIStatus(status & 0xF)  # 4 bits
 
     def get_jdr(self):
         """
-        Packs the fields into an 35-bit register and returns the formatted value.
-        | DATA_RD [(_AXI_ADDR_WIDTH+33-1):3] | STATUS [2:0] |
+        Packs the fields into an 36-bit register and returns the formatted value.
+        | DATA_RD [(_AXI_ADDR_WIDTH+33-1):3] | STATUS [3:0] |
         """
-        jdr = (self.data_rd << 3) | (self.status.value << 0)
+        jdr = (self.data_rd << 4) | (self.status.value << 0)
         return jdr
 
     @classmethod
     def from_jdr(cls, jdr_value):
         """
-        Takes an 35-bit value and decodes it into the class attributes.
+        Takes an 36-bit value and decodes it into the class attributes.
         """
-        data_rd_new = (jdr_value >> 3) & bits_to_ff_hex(_AXI_DATA_WIDTH)
-        status_new = jdr_value & 0x7
+        data_rd_new = (jdr_value >> 4) & bits_to_ff_hex(_AXI_DATA_WIDTH)
+        status_new = jdr_value & 0xF
         return cls(data_rd=data_rd_new, status=status_new)
 
     def __str__(self):

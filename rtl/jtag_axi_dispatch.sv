@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 09.09.2024
- * Last Modified Date: 19.09.2024
+ * Last Modified Date: 23.09.2024
  */
 module jtag_axi_dispatch
   import amba_axi_pkg::*;
@@ -32,7 +32,11 @@ module jtag_axi_dispatch
   s_axi_jtag_status_t   jtag_fifo_resp;
   logic                 jtag_fifo_resp_empty;
   logic                 jtag_fifo_rd;
-  logic                 jtag_axi_timeout;
+  logic                 jtag_axi_timeout_aw;
+  logic                 jtag_axi_timeout_ar;
+  logic                 jtag_axi_timeout_w;
+  logic                 jtag_axi_timeout_b;
+  logic                 jtag_axi_timeout_r;
   logic                 jtag_req_new;
   logic                 jtag_req_wr_data;
   logic                 axi_afifo_rd_txn_empty;
@@ -61,8 +65,24 @@ module jtag_axi_dispatch
     jtag_fifo_in.addr = axi_info_i.addr;
 
     case (1'b1)
-      (jtag_axi_timeout): begin
-        jtag_status_o.status = JTAG_TIMEOUT;
+      (jtag_axi_timeout_aw): begin
+        jtag_status_o.status = JTAG_TIMEOUT_AW;
+        jtag_status_o.data_rd = axi_data_t'('0);
+      end
+      (jtag_axi_timeout_ar): begin
+        jtag_status_o.status = JTAG_TIMEOUT_AR;
+        jtag_status_o.data_rd = axi_data_t'('0);
+      end
+      (jtag_axi_timeout_w): begin
+        jtag_status_o.status = JTAG_TIMEOUT_W;
+        jtag_status_o.data_rd = axi_data_t'('0);
+      end
+      (jtag_axi_timeout_b): begin
+        jtag_status_o.status = JTAG_TIMEOUT_B;
+        jtag_status_o.data_rd = axi_data_t'('0);
+      end
+      (jtag_axi_timeout_r): begin
+        jtag_status_o.status = JTAG_TIMEOUT_R;
         jtag_status_o.data_rd = axi_data_t'('0);
       end
       (~jtag_fifo_resp_empty): begin
@@ -161,7 +181,11 @@ module jtag_axi_dispatch
     .trstn                  (trstn),
     .clk                    (clk),
     .ares                   (ares),
-    .timeout_jtag_o         (jtag_axi_timeout),
+    .timeout_aw_jtag_o      (jtag_axi_timeout_aw),
+    .timeout_ar_jtag_o      (jtag_axi_timeout_ar),
+    .timeout_w_jtag_o       (jtag_axi_timeout_w),
+    .timeout_b_jtag_o       (jtag_axi_timeout_b),
+    .timeout_r_jtag_o       (jtag_axi_timeout_r),
     // JTAG to AXI - CTRL signals
     .fifo_rd_txn_empty      (axi_afifo_rd_txn_empty),
     .fifo_rd_txn            (axi_afifo_rd_txn),
