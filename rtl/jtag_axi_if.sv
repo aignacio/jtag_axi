@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 11.09.2024
- * Last Modified Date: 23.09.2024
+ * Last Modified Date: 26.09.2024
  */
 module jtag_axi_if
   import amba_axi_pkg::*;
@@ -16,11 +16,7 @@ module jtag_axi_if
   input                         trstn,
   input                         clk,
   input                         ares,
-  output  logic                 timeout_aw_jtag_o,
-  output  logic                 timeout_ar_jtag_o,
-  output  logic                 timeout_w_jtag_o,
-  output  logic                 timeout_b_jtag_o,
-  output  logic                 timeout_r_jtag_o,
+  output  logic [4:0]           timeout_jtag_o,
   // FIFO I/F - Incoming txn request
   input                         fifo_rd_txn_empty,
   input   s_axi_afifo_to_axi_t  fifo_rd_txn,
@@ -54,16 +50,7 @@ module jtag_axi_if
   logic b_timeout;
   logic r_timeout;
 
-  logic timeout_axi_aw;
-  logic timeout_axi_aw_ff;
-  logic timeout_axi_ar;
-  logic timeout_axi_ar_ff;
-  logic timeout_axi_w;
-  logic timeout_axi_w_ff;
-  logic timeout_axi_b;
-  logic timeout_axi_b_ff;
-  logic timeout_axi_r;
-  logic timeout_axi_r_ff;
+  logic [4:0] timeout_axi_ff, timeout_axi;
 
   int_op_type_t op_type_in, op_type_out;
 
@@ -151,27 +138,19 @@ module jtag_axi_if
       jtag_axi_mosi_o.bready = 1'b0;
     end
 
-    timeout_axi_aw = aw_timeout;
-    timeout_axi_ar = ar_timeout;
-    timeout_axi_w  = w_timeout;
-    timeout_axi_b  = b_timeout;
-    timeout_axi_r  = r_timeout;
+    timeout_axi[0] = aw_timeout;
+    timeout_axi[1] = ar_timeout;
+    timeout_axi[2] = w_timeout;
+    timeout_axi[3] = b_timeout;
+    timeout_axi[4] = r_timeout;
   end
 
   always_ff @ (posedge clk or posedge ares) begin
     if (ares) begin
-      timeout_axi_aw_ff <= 1'b0;
-      timeout_axi_ar_ff <= 1'b0;
-      timeout_axi_w_ff  <= 1'b0;
-      timeout_axi_b_ff  <= 1'b0;
-      timeout_axi_r_ff  <= 1'b0;
+      timeout_axi_ff <= '0;
     end
     else begin
-      timeout_axi_aw_ff <= timeout_axi_aw;
-      timeout_axi_ar_ff <= timeout_axi_ar;
-      timeout_axi_w_ff  <= timeout_axi_w;
-      timeout_axi_b_ff  <= timeout_axi_b;
-      timeout_axi_r_ff  <= timeout_axi_r;
+      timeout_axi_ff <= timeout_axi;
     end
   end
 
@@ -242,38 +221,14 @@ module jtag_axi_if
     .timeout  (r_timeout)
   );
 
-  cdc_2ff_sync u_2ff_timeout_aw (
-    .clk_sync    (tck),
-    .arst_master (~trstn),
-    .async_i     (timeout_axi_aw_ff),
-    .sync_o      (timeout_aw_jtag_o)
-  );
-
-  cdc_2ff_sync u_2ff_timeout_ar (
-    .clk_sync    (tck),
-    .arst_master (~trstn),
-    .async_i     (timeout_axi_ar_ff),
-    .sync_o      (timeout_ar_jtag_o)
-  );
-
-  cdc_2ff_sync u_2ff_timeout_w (
-    .clk_sync    (tck),
-    .arst_master (~trstn),
-    .async_i     (timeout_axi_w_ff),
-    .sync_o      (timeout_w_jtag_o)
-  );
-
-  cdc_2ff_sync u_2ff_timeout_b (
-    .clk_sync    (tck),
-    .arst_master (~trstn),
-    .async_i     (timeout_axi_b_ff),
-    .sync_o      (timeout_b_jtag_o)
-  );
-
-  cdc_2ff_sync u_2ff_timeout_r (
-    .clk_sync    (tck),
-    .arst_master (~trstn),
-    .async_i     (timeout_axi_r_ff),
-    .sync_o      (timeout_r_jtag_o)
-  );
+  generate
+    for (genvar i=0; i<5; i++) begin
+      cdc_2ff_sync u_2ff_timeout_sync (
+        .clk_sync    (tck),
+        .arst_master (~trstn),
+        .async_i     (timeout_axi_ff[i]),
+        .sync_o      (timeout_jtag_o[i])
+      );
+    end
+  endgenerate
 endmodule

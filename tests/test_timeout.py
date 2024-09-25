@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 23.09.2024
+# Last Modified Date: 26.09.2024
 import cocotb
 import logging
 import pytest
@@ -77,6 +77,7 @@ async def run_test(dut, idle_generator=None, backpressure_generator=None, timeou
     dut.to_wready.value = 0
     dut.to_rvalid.value = 0
     dut.to_bvalid.value = 0
+    exp = 0
 
     cocotb.start_soon(Clock(dut.clk_axi, *cfg.CLK_100MHz).start())
 
@@ -118,14 +119,19 @@ async def run_test(dut, idle_generator=None, backpressure_generator=None, timeou
         )
     elif timeout == "awready":
         timeout_dut = dut.to_awready
+        exp = JTAGToAXIStatus.JTAG_TIMEOUT_AW
     elif timeout == "arready":
         timeout_dut = dut.to_arready
+        exp = JTAGToAXIStatus.JTAG_TIMEOUT_AR
     elif timeout == "wready":
         timeout_dut = dut.to_wready
+        exp = JTAGToAXIStatus.JTAG_TIMEOUT_W
     elif timeout == "rvalid":
         timeout_dut = dut.to_rvalid
+        exp = JTAGToAXIStatus.JTAG_TIMEOUT_R
     elif timeout == "bvalid":
         timeout_dut = dut.to_bvalid
+        exp = JTAGToAXIStatus.JTAG_TIMEOUT_B
 
     dut.log.info(f"{timeout_dut._name} was randomly selected and forced to 0.")
     # Verilator does not support force =/
@@ -145,7 +151,7 @@ async def run_test(dut, idle_generator=None, backpressure_generator=None, timeou
     resp = []
     # Perform the writes and reads
     for addr, val, sz, strb in zip(address, value, size, wstrb):
-        await jtag.write_axi(addr, val, sz, strb)
+        resp.append(await jtag.write_axi(addr, val, sz, strb))
         resp.append(await jtag.read_axi(addr, sz))
 
     for ret in resp:
@@ -156,7 +162,8 @@ async def run_test(dut, idle_generator=None, backpressure_generator=None, timeou
             JTAGToAXIStatus.JTAG_TIMEOUT_W,
             JTAGToAXIStatus.JTAG_TIMEOUT_B,
         ]:
-            raise TestSuccess("Timeout detected!")
+            if (ret.status == exp) or (timeout == None):
+                raise TestSuccess("Timeout detected!")
     raise TestFailure("Expected timeout to be triggered!")
 
 
