@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 08.10.2023
-# Last Modified Date: 20.09.2024
+# Last Modified Date: 26.09.2024
 
 import nox
 import os
@@ -28,7 +28,8 @@ def run(session):
         "pytest-xdist",
         "pytest-split",
         "cocotb >= 1.9.0",
-        "cocotbext-axi"
+        "cocotbext-axi",
+        "pyftdi"
     )
     session.run("py.test",
                 "-n", "auto", "-rF", "tests", *session.posargs)
