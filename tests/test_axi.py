@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 20.09.2024
+# Last Modified Date: 28.09.2024
 import cocotb
 import logging
 import pytest
@@ -20,7 +20,7 @@ from random import randrange
 from const.const import cfg
 from const.help_fn import reset_fsm, select_instruction, move_to_shift_dr
 from jtag_axi.jtag_base import JTAGToAXIStatus, JDRStatusAXI, InstJTAG
-from jtag_axi.jtag_axi import SimJtagToAXI
+from jtag_axi.jtag_axi_sim import SimJtagToAXI
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb.clock import Clock
 from cocotb.regression import TestFactory

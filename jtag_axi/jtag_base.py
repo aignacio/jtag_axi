@@ -4,9 +4,9 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 20.09.2024
-# Last Modified Date: 23.09.2024
+# Last Modified Date: 28.09.2024
 from enum import Enum
-
+from abc import abstractmethod
 
 _AXI_ADDR_WIDTH = 32
 _AXI_DATA_WIDTH = 32
@@ -171,3 +171,118 @@ class JDRStatusAXI:
         if isinstance(other, JDRStatusAXI):
             return self.data_rd == other.data_rd and self.status == other.status
         return False
+
+
+class BaseJtagToAXI:
+    @abstractmethod
+    def __init__(
+        self, addr_width: int = 32, data_width: int = 32, async_fifo_depth: int = 4
+    ):
+        """Initialize the interface (for hardware or DUT)."""
+        self.addr_width = addr_width
+        self.data_width = data_width
+        # Initialize JDR values
+        self.idcode_jdr = 0
+        self.ic_reset_jdr = 0
+        self.addr_axi_jdr = 0
+        self.data_write_axi_jdr = 0
+        self.wstrb_axi_jdr = 0
+        self.ctrl_axi_jdr = JDRCtrlAXI()
+        self.status_axi_jdr = 0
+        self.async_fifo_depth = async_fifo_depth
+        self.tap_state = JTAGState.TEST_LOGIC_RESET
+
+        # {current_state: {next_state: [TMS_sequence]}}
+        self.state_transitions = {
+            JTAGState.TEST_LOGIC_RESET: {
+                JTAGState.RUN_TEST_IDLE: [0],
+                JTAGState.SELECT_DR_SCAN: [1, 0],
+            },
+            JTAGState.RUN_TEST_IDLE: {
+                JTAGState.SELECT_DR_SCAN: [1],
+            },
+            JTAGState.SELECT_DR_SCAN: {
+                JTAGState.CAPTURE_DR: [0],
+                JTAGState.SELECT_IR_SCAN: [1],
+            },
+            JTAGState.CAPTURE_DR: {
+                JTAGState.SHIFT_DR: [0],
+                JTAGState.EXIT1_DR: [1],
+            },
+            JTAGState.SHIFT_DR: {
+                JTAGState.EXIT1_DR: [1],
+            },
+            JTAGState.EXIT1_DR: {
+                JTAGState.UPDATE_DR: [1],
+                JTAGState.PAUSE_DR: [0],
+            },
+            JTAGState.PAUSE_DR: {
+                JTAGState.EXIT2_DR: [1],
+            },
+            JTAGState.EXIT2_DR: {
+                JTAGState.SHIFT_DR: [0],
+                JTAGState.UPDATE_DR: [1],
+            },
+            JTAGState.UPDATE_DR: {
+                JTAGState.RUN_TEST_IDLE: [0],
+                JTAGState.SELECT_DR_SCAN: [1],
+            },
+            JTAGState.SELECT_IR_SCAN: {
+                JTAGState.CAPTURE_IR: [0],
+                JTAGState.TEST_LOGIC_RESET: [1],
+            },
+            JTAGState.CAPTURE_IR: {
+                JTAGState.SHIFT_IR: [0],
+                JTAGState.EXIT1_IR: [1],
+            },
+            JTAGState.SHIFT_IR: {
+                JTAGState.EXIT1_IR: [1],
+            },
+            JTAGState.EXIT1_IR: {
+                JTAGState.UPDATE_IR: [1],
+                JTAGState.PAUSE_IR: [0],
+            },
+            JTAGState.PAUSE_IR: {
+                JTAGState.EXIT2_IR: [1],
+            },
+            JTAGState.EXIT2_IR: {
+                JTAGState.SHIFT_IR: [0],
+                JTAGState.UPDATE_IR: [1],
+            },
+            JTAGState.UPDATE_IR: {
+                JTAGState.RUN_TEST_IDLE: [0],
+                JTAGState.SELECT_DR_SCAN: [1],
+            },
+        }
+
+    def _convert_size(self, value):
+        """Convert byte size into asize."""
+        for size in AXISize:
+            if (2**size.value) == value:
+                return size
+        raise ValueError(f"No asize value found for {value} number of bytes")
+
+    @abstractmethod
+    def write_axi(self, addr, data, size):
+        """Send data through JTAG."""
+        pass
+
+    @abstractmethod
+    def read_axi(self, addr, size):
+        """Read data from JTAG."""
+        pass
+
+    @abstractmethod
+    def reset(self):
+        """Reset the JTAG interface."""
+        pass
+
+    @abstractmethod
+    def write_read_ic_reset(self):
+        """Write IC Reset a value."""
+        pass
+
+    @abstractmethod
+    def _get_idcode(self):
+        """Get JTAG IDCODE."""
+        pass

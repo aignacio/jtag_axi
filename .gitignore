@@ -136,3 +136,4 @@ fusesoc.conf
 jtag_axi/ftdi
 RM_ME_rtl_pp.sv
 log.txt
+RM_ME
