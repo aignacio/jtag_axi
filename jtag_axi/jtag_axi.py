@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 15.09.2024
-# Last Modified Date: 26.09.2024
+# Last Modified Date: 28.09.2024
 import os
 from abc import abstractmethod
 from .jtag_base import *
@@ -13,6 +13,7 @@ from cocotb.handle import SimHandleBase
 from enum import Enum
 from pyftdi.jtag import JtagEngine, JtagTool
 from pyftdi.ftdi import Ftdi
+from pyftdi.bits import BitSequence
 
 
 def bin_to_num(binary_list):
@@ -106,7 +107,6 @@ class BaseJtagToAXI:
                 JTAGState.SELECT_DR_SCAN: [1],
             },
         }
-
 
     @abstractmethod
     def write_axi(self, addr, data, size):
@@ -341,7 +341,7 @@ class SimJtagToAXI(BaseJtagToAXI):
                 return size
         raise ValueError(f"No asize value found for {value} number of bytes")
 
-    async def write_axi(self, address, data, size, wstrb = 0xF):
+    async def write_axi(self, address, data, size, wstrb=0xF):
         if self.addr_axi_jdr != address:
             if address < 2**self.addr_width:
                 await self._shift_addr_axi(address)
@@ -428,14 +428,14 @@ class SimJtagToAXI(BaseJtagToAXI):
 
 
 class JtagToAXIFTDI(BaseJtagToAXI):
-    def __init__ (
-        device = 'ftdi://ftdi:2232/1',
+    def __init__(
+        device="ftdi://ftdi:2232/1",
         name: str = "JTAG to AXI IP",
         freq: int = 1e6,
         trst: bool = False,
         debug: bool = False,
         **kwargs,
-    )
+    ):
         super().__init__(**kwargs)
         self.ftdi = Ftdi()
 
@@ -460,40 +460,30 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         if self.debug:
             print(f"[JTAG_to_AXI] Reset issued")
         self.jtag.reset()
- 
-    def _get_idcode(self):
-        """Read the IDCODE right after a JTAG reset"""
-        self.jtag.reset()
-        self.idcode_jdr = self.jtag.read_dr(32)
-        self.jtag.go_idle()
-        if self.debug:
-            print(f"[JTAG_to_AXI] IDCODE (reset): 0x{int(self.idcode_jdr):x}")
 
     def _get_jdr(self, jdr: InstJTAG):
-        instruction = JTAG_INSTR['IDCODE']
-        self.jtag.change_state('shift_ir')
+        instruction = int(jdr[0], 2)
+        self.jtag.change_state("shift_ir")
         retval = self.jtag.shift_and_update_register(instruction)
-        print(f'retval: 0x{int(retval):x}')
         self.jtag.go_idle()
-        self.jtag.change_state('shift_dr')
-        idcode = self.jtag.shift_and_update_register(BitSequence('0'*32))
+        self.jtag.change_state("shift_dr")
+        jdr_value = self.jtag.shift_and_update_register(BitSequence("0" * jdr[1]))
         self.jtag.go_idle()
-        print(f'IDCODE (idcode): 0x{int(idcode):08x}')
-        return old
+        return int(jdr_value)
 
     def read_jdrs(self):
-        self.idcode_jdr         = 
-        self.ic_reset_jdr       = 
-        self.addr_axi_jdr       = 
-        self.data_write_axi_jdr = 
-        self.status_axi_jdr     = 
-        self.ctrl_axi_jdr       = 
-        self.wstrb_axi_jdr      = 
+        self.idcode_jdr = self._get_jdr(InstJTAG.IDCODE)
+        self.ic_reset_jdr = self._get_jdr(InstJTAG.IC_RESET)
+        self.addr_axi_jdr = self._get_jdr(InstJTAG.ADDR_AXI_REG)
+        self.data_write_axi_jdr = self._get_jdr(InstJTAG.DATA_W_AXI_REG)
+        self.status_axi_jdr = self._get_jdr(InstJTAG.STATUS_AXI_REG)
+        self.ctrl_axi_jdr = self._get_jdr(InstJTAG.CTRL_AXI_REG)
+        self.wstrb_axi_jdr = self._get_jdr(InstJTAG.WSTRB_AXI_REG)
 
-        self.dut.log.info(f"[JTAG_to_AXI] JDR - JTAG Data Registers")
-        self.dut.log.info(f"[JTAG_to_AXI] IDCODE     \t{self.idcode_jdr}")
-        self.dut.log.info(f"[JTAG_to_AXI] IC_RESET   \t{self.ic_reset_jdr}")
-        self.dut.log.info(f"[JTAG_to_AXI] ADDR_AXI   \t{self.addr_axi_jdr}")
-        self.dut.log.info(f"[JTAG_to_AXI] DATA_AXI   \t{self.data_write_axi_jdr}")
-        self.dut.log.info(f"[JTAG_to_AXI] CTRL_AXI   \t{self.ctrl_axi_jdr}")
-        self.dut.log.info(f"[JTAG_to_AXI] WSTRB_AXI  \t{self.wstrb_axi_jdr}")
+        print(f"[JTAG_to_AXI] JDR - JTAG Data Registers")
+        print(f"[JTAG_to_AXI] IDCODE     \t{self.idcode_jdr}")
+        print(f"[JTAG_to_AXI] IC_RESET   \t{self.ic_reset_jdr}")
+        print(f"[JTAG_to_AXI] ADDR_AXI   \t{self.addr_axi_jdr}")
+        print(f"[JTAG_to_AXI] DATA_AXI   \t{self.data_write_axi_jdr}")
+        print(f"[JTAG_to_AXI] CTRL_AXI   \t{self.ctrl_axi_jdr}")
+        print(f"[JTAG_to_AXI] WSTRB_AXI  \t{self.wstrb_axi_jdr}")
