@@ -134,17 +134,17 @@ class JtagToAXIFTDI(BaseJtagToAXI):
 
         if address >= 2**self.addr_width:
             raise ValueError(
-                "[JTAG_to_AXI] Address exceeds max of address width {self.addr_width}"
+                f"[JTAG_to_AXI] Address exceeds max of address width {self.addr_width}"
             )
 
         if data >= 2**self.data_width:
             raise ValueError(
-                "[JTAG_to_AXI] Data write exceeds max of data width {self.data_width}"
+                f"[JTAG_to_AXI] Data write exceeds max of data width {self.data_width}"
             )
 
         if wstrb > int("1" * (self.data_width // 8), 2):
             raise ValueError(
-                "[JTAG_to_AXI] Write strobe exceeds max of {hex(int('1'*(self.data_width//8),2))}"
+                f"[JTAG_to_AXI] Write strobe exceeds max of {hex(int('1'*(self.data_width//8),2))}"
             )
 
         if size > (self.data_width // 8):
@@ -215,7 +215,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
 
         if address >= 2**self.addr_width:
             raise ValueError(
-                "[JTAG_to_AXI] Address exceeds max of address width {self.addr_width}"
+                f"[JTAG_to_AXI] Address exceeds max of address width {self.addr_width}"
             )
 
         if size > (self.data_width // 8):
@@ -275,7 +275,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
     def write_ic_reset(self, value):
         if value >= 2**self.ic_reset_width:
             raise ValueError(
-                "[JTAG_to_AXI] Value to write on IC_RESET is greater than max {2**self.ic_reset_width}"
+                f"[JTAG_to_AXI] Value to write on IC_RESET ({value}) is greater than max {2**self.ic_reset_width}"
             )
         if self.debug:
             print(f"[JTAG_to_AXI] Writing {value} in IC_RESET JDR")
