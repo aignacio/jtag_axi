@@ -1,6 +1,6 @@
 from jtag_axi import JtagToAXIFTDI
 
-handle = JtagToAXIFTDI(debug=True)
+handle = JtagToAXIFTDI()
 handle.read_jdrs()
-print(handle.write_axi(0x010, 0xDEADBEEF))
 print(handle.read_axi(0x010))
+print(handle.write_axi(0x010, 0xDEADBEEF))

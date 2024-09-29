@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 15.09.2024
-# Last Modified Date: 28.09.2024
+# Last Modified Date: 29.09.2024
 import os
 from .jtag_base import *
 from enum import Enum
@@ -42,7 +42,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         self.ftdi.open_from_url(device)
 
         self.jtag = JtagEngine(trst=trst, frequency=freq)
-        self.jtag.configure(environ.get('FTDI_DEVICE', device))
+        self.jtag.configure(environ.get("FTDI_DEVICE", device))
         self.jtag.reset()
 
         self.tool = JtagTool(self.jtag)
@@ -60,6 +60,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
             print(f"[JTAG_to_AXI] AXI Address width\t{self.addr_width}")
             print(f"[JTAG_to_AXI] AXI Data width  \t{self.data_width}")
             print(f"[JTAG_to_AXI] AFIFO Depth  \t{self.async_fifo_depth}")
+            print(f"[JTAG_to_AXI] IC Reset width  \t{self.ic_reset_width}")
 
         self.idcode_jdr = self._get_jdr(InstJTAG.IDCODE)
         self.ic_reset_jdr = self._get_jdr(InstJTAG.IC_RESET)
@@ -119,56 +120,70 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         jdr_value = self.jtag.shift_and_update_register(jdr_value)
         return int(jdr_value)
 
+    def _update_current(self, info, current, new):
+        if current == new:
+            if self.debug:
+                print(f"[JTAG_to_AXI] Skipping {info} shift due to value match")
+            return False
+        else:
+            return True
+
     def write_axi(self, address, data, size=None, wstrb=0xF):
         if size is None:
-            size = self.data_width//8
+            size = self.data_width // 8
 
-        if self.addr_axi_jdr != address:
-            if address < 2**self.addr_width:
-                self._shift_jdr(InstJTAG.ADDR_AXI_REG, address)
-                self.addr_axi_jdr = address
-            else:
-                raise ValueError(
-                    "[JTAG_to_AXI] Address exceeds max of address width {self.addr_width}"
-                )
-        elif self.debug:
-            print("[JTAG_to_AXI] Skipping address shift due to value match")
+        if address >= 2**self.addr_width:
+            raise ValueError(
+                "[JTAG_to_AXI] Address exceeds max of address width {self.addr_width}"
+            )
 
-        if self.data_write_axi_jdr != data:
-            if data < 2**self.data_width:
-                self._shift_jdr(InstJTAG.DATA_W_AXI_REG, data)
-                self.data_write_axi_jdr = data
-            else:
-                raise ValueError(
-                    "[JTAG_to_AXI] Data write exceeds max of data width {self.data_width}"
-                )
-        elif self.debug:
-            print("[JTAG_to_AXI] Skipping data shift due to value match")
+        if data >= 2**self.data_width:
+            raise ValueError(
+                "[JTAG_to_AXI] Data write exceeds max of data width {self.data_width}"
+            )
 
-        if self.wstrb_axi_jdr != wstrb:
-            if wstrb <= int('1'*(self.data_width//8),2):
-                self._shift_jdr(InstJTAG.WSTRB_AXI_REG, wstrb)
-                self.wstrb_axi_jdr =wstrb
-            else:
-                raise ValueError(
-                    "[JTAG_to_AXI] Write strobe exceeds max of {hex(int('1'*(self.data_width//8),2))}"
-                )
-        elif self.debug:
-            print("[JTAG_to_AXI] Skipping wstrb shift due to value match")
+        if wstrb > int("1" * (self.data_width // 8), 2):
+            raise ValueError(
+                "[JTAG_to_AXI] Write strobe exceeds max of {hex(int('1'*(self.data_width//8),2))}"
+            )
+
+        if size > (self.data_width // 8):
+            raise ValueError(
+                f"[JTAG_to_AXI] Number of bytes requested ({self.size}) is greater"
+                f" than max ({self.data_width // 8})"
+            )
+
+        if self._update_current("address", self.addr_axi_jdr, address):
+            self._shift_jdr(InstJTAG.ADDR_AXI_REG, address)
+            self.addr_axi_jdr = address
+
+        if self._update_current("write data", self.data_write_axi_jdr, data):
+            self._shift_jdr(InstJTAG.DATA_W_AXI_REG, data)
+            self.data_write_axi_jdr = data
+
+        if self._update_current("write strobe", self.wstrb_axi_jdr, wstrb):
+            self._shift_jdr(InstJTAG.WSTRB_AXI_REG, wstrb)
+            self.wstrb_axi_jdr = wstrb
 
         empty_ctrl = JDRCtrlAXI(start=0).get_jdr()
         send_write = JDRCtrlAXI(
             start=1, txn_type=TxnType.AXI_WRITE, size_axi=self._convert_size(size)
         )
-        current = JDRCtrlAXI.from_jdr(self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl))
+        current = JDRCtrlAXI.from_jdr(
+            self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl)
+        )
 
         # Check whether we have enough free slots to send
         while current.fifo_ocup >= self.async_fifo_depth:
             if self.debug:
-                print(f"[JTAG_to_AXI] Waiting ASYNC FIFO to have slots "
-                      f"available, ocup: {current.fifo_ocup}")
+                print(
+                    f"[JTAG_to_AXI] Waiting ASYNC FIFO to have slots "
+                    f"available, ocup: {current.fifo_ocup} / {self.async_fifo_depth}"
+                )
             self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0)
-            current = JDRCtrlAXI.from_jdr(self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl))
+            current = JDRCtrlAXI.from_jdr(
+                self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl)
+            )
 
         # Send the TXN
         current = JDRCtrlAXI.from_jdr(
@@ -178,14 +193,17 @@ class JtagToAXIFTDI(BaseJtagToAXI):
             f"[JTAG_to_AXI][WRITE] Addr = {hex(address)} / Data = {hex(data)}"
             f" Size = {self._convert_size(size)} / WrStrb = {bin(wstrb)}"
         )
-        current = JDRCtrlAXI.from_jdr(self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl))
+        current = JDRCtrlAXI.from_jdr(
+            self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl)
+        )
         if self.debug:
-            print(f"[JTAG_to_AXI] Current AFIFO size: {current.fifo_ocup}")
+            print(
+                f"[JTAG_to_AXI] Current AFIFO size: {current.fifo_ocup} / {self.async_fifo_depth}"
+            )
         status_axi = JDRStatusAXI.from_jdr(self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0))
         while status_axi.status == JTAGToAXIStatus.JTAG_RUNNING:
             if self.debug:
-                print(f"[JTAG_to_AXI] Waiting TXN to complete: "
-                      f"{status_axi.status}")
+                print(f"[JTAG_to_AXI] Waiting TXN to complete: " f"{status_axi.status}")
             status_axi = JDRStatusAXI.from_jdr(
                 self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0)
             )
@@ -193,32 +211,42 @@ class JtagToAXIFTDI(BaseJtagToAXI):
 
     def read_axi(self, address, size=None):
         if size is None:
-            size = self.data_width//8
+            size = self.data_width // 8
 
-        if self.addr_axi_jdr != address:
-            if address < 2**self.addr_width:
-                self._shift_jdr(InstJTAG.ADDR_AXI_REG, address)
-                self.addr_axi_jdr = address
-            else:
-                raise ValueError(
-                    "[JTAG_to_AXI] Address exceeds max of address width {self.addr_width}"
-                )
-        elif self.debug:
-            print("[JTAG_to_AXI] Skipping address shift due to value match")
+        if address >= 2**self.addr_width:
+            raise ValueError(
+                "[JTAG_to_AXI] Address exceeds max of address width {self.addr_width}"
+            )
+
+        if size > (self.data_width // 8):
+            raise ValueError(
+                f"[JTAG_to_AXI] Number of bytes requested ({self.size}) is greater"
+                f" than max ({self.data_width // 8})"
+            )
+
+        if self._update_current("address", self.addr_axi_jdr, address):
+            self._shift_jdr(InstJTAG.ADDR_AXI_REG, address)
+            self.addr_axi_jdr = address
 
         empty_ctrl = JDRCtrlAXI(start=0).get_jdr()
         send_write = JDRCtrlAXI(
             start=1, txn_type=TxnType.AXI_READ, size_axi=self._convert_size(size)
         )
-        current = JDRCtrlAXI.from_jdr(self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl))
+        current = JDRCtrlAXI.from_jdr(
+            self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl)
+        )
 
         # Check whether we have enough free slots to send
         while current.fifo_ocup >= self.async_fifo_depth:
             if self.debug:
-                print(f"[JTAG_to_AXI] Waiting ASYNC FIFO to have slots "
-                      f"available, ocup: {current.fifo_ocup}")
+                print(
+                    f"[JTAG_to_AXI] Waiting ASYNC FIFO to have slots "
+                    f"available, ocup: {current.fifo_ocup} / {self.async_fifo_depth}"
+                )
             self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0)
-            current = JDRCtrlAXI.from_jdr(self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl))
+            current = JDRCtrlAXI.from_jdr(
+                self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl)
+            )
 
         # Send the TXN
         current = JDRCtrlAXI.from_jdr(
@@ -228,14 +256,17 @@ class JtagToAXIFTDI(BaseJtagToAXI):
             f"[JTAG_to_AXI][READ] Addr = {hex(address)}"
             f" Size = {self._convert_size(size)}"
         )
-        current = JDRCtrlAXI.from_jdr(self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl))
+        current = JDRCtrlAXI.from_jdr(
+            self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl)
+        )
         if self.debug:
-            print(f"[JTAG_to_AXI] Current AFIFO size: {current.fifo_ocup}")
+            print(
+                f"[JTAG_to_AXI] Current AFIFO size: {current.fifo_ocup} / {self.async_fifo_depth}"
+            )
         status_axi = JDRStatusAXI.from_jdr(self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0))
         while status_axi.status == JTAGToAXIStatus.JTAG_RUNNING:
             if self.debug:
-                print(f"[JTAG_to_AXI] Waiting TXN to complete: "
-                      f"{status_axi.status}")
+                print(f"[JTAG_to_AXI] Waiting TXN to complete: " f"{status_axi.status}")
             status_axi = JDRStatusAXI.from_jdr(
                 self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0)
             )

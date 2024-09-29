@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 20.09.2024
-# Last Modified Date: 28.09.2024
+# Last Modified Date: 29.09.2024
 from enum import Enum
 from abc import abstractmethod
 
@@ -176,11 +176,16 @@ class JDRStatusAXI:
 class BaseJtagToAXI:
     @abstractmethod
     def __init__(
-        self, addr_width: int = 32, data_width: int = 32, async_fifo_depth: int = 4
+        self,
+        addr_width: int = 32,
+        data_width: int = 32,
+        async_fifo_depth: int = 4,
+        ic_reset_width: int = 4,
     ):
         """Initialize the interface (for hardware or DUT)."""
         self.addr_width = addr_width
         self.data_width = data_width
+        self.ic_reset_width = ic_reset_width
         # Initialize JDR values
         self.idcode_jdr = 0
         self.ic_reset_jdr = 0
