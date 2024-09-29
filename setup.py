@@ -3,7 +3,7 @@ import codecs
 import os
 from jtag_axi.version import __version__
 
-DESCRIPTION = "JTAG to AXI IP python I/F"
+DESCRIPTION = "JTAG to AXI bridge python I/F"
 LONG_DESCRIPTION = "Small class to handle JTAG to AXI requests"
 
 long_description = "\n"
@@ -13,8 +13,8 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
 
 # Setting up
 setup(
-    name="jtag-to-axi",
-    packages=find_namespace_packages(include=["jtag_axi.*"]),
+    name="jtag_axi",
+    packages=find_packages(),
     version=__version__,
     author="aignacio (Anderson Ignacio)",
     author_email="<anderson@aignacio.com>",
