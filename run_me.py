@@ -9,7 +9,7 @@ from jtag_axi import JtagToAXIFTDI
 import time
 import random
 
-RAM_SIZE = 400 #32*1024 # memory size in bytes
+RAM_SIZE = 32*1024 # memory size in bytes
 MEM_START_0 = 0x00
 MEM_START_1 = 0x10000000
 WORD_SIZE = 4
@@ -23,6 +23,7 @@ def rnd_val(bit: int = 0, zero: bool = True):
 def initialize_memory(ram_size):
     num_words = ram_size // WORD_SIZE
     memory = [0] * num_words  # Initialize memory with zeroed values
+    print(f"Memory no of rows is {len(memory)} / RAM_SIZE = {ram_size//1024}KiB")
     return memory
 
 def write_to_memory(memory, jtag, offset):
