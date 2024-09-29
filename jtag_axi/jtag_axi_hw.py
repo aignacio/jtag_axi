@@ -48,7 +48,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         self.tool = JtagTool(self.jtag)
         self.debug = debug
         if self.debug:
-            print(f"[JTAG_to_AXI] ---- INIT DEVICE PRINTOUT ----")
+            print(f"[JTAG_to_AXI] ---- Init Device ----")
             print(f"[JTAG_to_AXI] Init device \t{device}")
             if freq >= 1e6:
                 print(f"[JTAG_to_AXI] Frequency \t{freq/1e6:.3f} MHz")
@@ -266,8 +266,18 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         status_axi = JDRStatusAXI.from_jdr(self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0))
         while status_axi.status == JTAGToAXIStatus.JTAG_RUNNING:
             if self.debug:
-                print(f"[JTAG_to_AXI] Waiting TXN to complete: " f"{status_axi.status}")
+                print(f"[JTAG_to_AXI] Waiting TXN to complete: {status_axi.status}")
             status_axi = JDRStatusAXI.from_jdr(
                 self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0)
             )
         return status_axi
+
+    def write_ic_reset(self, value):
+        if value >= 2**self.ic_reset_width:
+            raise ValueError(
+                "[JTAG_to_AXI] Value to write on IC_RESET is greater than max {2**self.ic_reset_width}"
+            )
+        if self.debug:
+            print(f"[JTAG_to_AXI] Writing {value} in IC_RESET JDR")
+        self._shift_jdr(InstJTAG.IC_RESET, value)
+        self.ic_reset_jdr = value
