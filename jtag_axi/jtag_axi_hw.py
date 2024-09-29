@@ -191,7 +191,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         )
         print(
             f"[JTAG_to_AXI][WRITE] Addr = {hex(address)} / Data = {hex(data)}"
-            f" Size = {self._convert_size(size)} / WrStrb = {bin(wstrb)}"
+            f" / Size = {self._convert_size(size)} / WrStrb = {bin(wstrb)}"
         )
         current = JDRCtrlAXI.from_jdr(
             self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl)
@@ -254,7 +254,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         )
         print(
             f"[JTAG_to_AXI][READ] Addr = {hex(address)}"
-            f" Size = {self._convert_size(size)}"
+            f" / Size = {self._convert_size(size)}"
         )
         current = JDRCtrlAXI.from_jdr(
             self._shift_jdr(InstJTAG.CTRL_AXI_REG, empty_ctrl)

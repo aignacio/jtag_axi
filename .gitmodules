@@ -1,6 +1,9 @@
 [submodule "rtl/bus_arch_sv_pkg"]
 	path = rtl/bus_arch_sv_pkg
-	url = git@github.com:aignacio/bus_arch_sv_pkg.git
+	url = https://github.com/aignacio/bus_arch_sv_pkg.git
 [submodule "rtl/cdc_components"]
 	path = rtl/cdc_components
-	url = git@github.com:aignacio/cdc_components.git
+	url = https://github.com/aignacio/cdc_components.git
+[submodule "fpga/soc_components"]
+	path = fpga/soc_components
+	url = https://github.com/aignacio/soc_components.git
