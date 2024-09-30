@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 20.09.2024
+# Last Modified Date: 30.09.2024
 import cocotb
 import logging
 import pytest
@@ -61,6 +61,7 @@ class JTAGDataRegister:
 
 @cocotb.test()
 async def run_test(dut, jtag_dr=InstJTAG.EXTEST):
+    dut.usercode_i.value = 0xBABE_BABE
     await reset_fsm(dut)
     args = (dut,) + jtag_dr.value
     dr = JTAGDataRegister(*args)
@@ -127,6 +128,7 @@ if cocotb.SIM_NAME:
             InstJTAG.CTRL_AXI_REG,
             InstJTAG.STATUS_AXI_REG,
             InstJTAG.WSTRB_AXI_REG,
+            InstJTAG.USERCODE,
         ],
     )
     factory.generate_tests()

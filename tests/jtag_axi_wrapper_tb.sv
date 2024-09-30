@@ -144,6 +144,8 @@ module jtag_axi_wrapper_tb
     .tdi                      (tdi),
     .tdo                      (tdo),
     .ic_rst                   (ic_rst),
+    .usercode_i               ('hBABE_BABE),
+    .usercode_update_o        (),
     .clk_axi                  (clk_axi),
     .ares_axi                 (ares_axi),
     .jtag_axi_mosi_o          (jtag_axi_mosi_o),

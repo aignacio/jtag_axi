@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 15.09.2024
-# Last Modified Date: 28.09.2024
+# Last Modified Date: 30.09.2024
 import os
 from .jtag_base import *
 from cocotb.triggers import ClockCycles, Timer
@@ -189,6 +189,7 @@ class SimJtagToAXI(BaseJtagToAXI):
         self.status_axi_jdr = hex(await self._get_jdr(InstJTAG.STATUS_AXI_REG))
         self.ctrl_axi_jdr = hex(await self._get_jdr(InstJTAG.CTRL_AXI_REG))
         self.wstrb_axi_jdr = hex(await self._get_jdr(InstJTAG.WSTRB_AXI_REG))
+        self.usercode_jdr = hex(await self._get_jdr(InstJTAG.USERCODE))
 
         self.dut.log.info("---------------------------------")
         self.dut.log.info("|=> JDR - JTAG Data Registers <=|")
@@ -199,6 +200,7 @@ class SimJtagToAXI(BaseJtagToAXI):
         self.dut.log.info(f"- DATA_AXI   \t{self.data_write_axi_jdr}")
         self.dut.log.info(f"- CTRL_AXI   \t{self.ctrl_axi_jdr}")
         self.dut.log.info(f"- WSTRB_AXI  \t{self.wstrb_axi_jdr}")
+        self.dut.log.info(f"- USERCODE   \t{self.usercode_jdr}")
 
     async def _shift_addr_axi(self, value: int):
         self.addr_axi_jdr = value

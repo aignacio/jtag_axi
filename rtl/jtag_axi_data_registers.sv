@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 28.08.2024
- * Last Modified Date: 17.09.2024
+ * Last Modified Date: 30.09.2024
  */
 module jtag_axi_data_registers
   import jtag_axi_pkg::*;
@@ -18,8 +18,10 @@ module jtag_axi_data_registers
   output  logic                       tdo,
   input   tap_ctrl_fsm_t              tap_state,
   input   ir_decoding_t               ir_dec,
-  // Data Register output
+  // Data Register output/input
   output  logic [(IC_RST_WIDTH-1):0]  ic_rst,
+  input   logic [31:0]                usercode_i,
+  output  logic                       usercode_update_o,
   // To AXI I/F
   input   s_axi_jtag_status_t         jtag_status_i,
   output  logic                       axi_status_rd_o, // Ack last status
@@ -56,6 +58,7 @@ module jtag_axi_data_registers
   always_comb begin
     tdo = 1'b0;
 
+    usercode_update_o = 1'b0;
     next_axi_status_rd = 1'b0;
     next_axi_req = 1'b0;
     next_bypass = bypass_ff;
@@ -114,6 +117,21 @@ module jtag_axi_data_registers
         else if (tap_state == SHIFT_DR) begin
           next_sr = {tdi,sr_ff[(DR_MAX_WIDTH-1):1]};
           tdo = sr_n_ff[0];
+        end
+        else if (tap_state == EXIT1_DR) begin
+          tdo = sr_n_ff[0];
+        end
+      end
+      USERCODE: begin
+        if (tap_state == CAPTURE_DR) begin
+          next_sr[31:0] = usercode_i;
+        end
+        else if (tap_state == SHIFT_DR) begin
+          next_sr[31:0] = {tdi,sr_ff[31:1]};
+          tdo = sr_n_ff[0];
+        end
+        else if (tap_state == UPDATE_DR) begin
+          usercode_update_o = 1'b1;
         end
         else if (tap_state == EXIT1_DR) begin
           tdo = sr_n_ff[0];

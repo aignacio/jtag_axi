@@ -3,7 +3,7 @@
  * License           : MIT license <Check LICENSE>
  * Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
  * Date              : 09.09.2024
- * Last Modified Date: 18.09.2024
+ * Last Modified Date: 30.09.2024
  */
 module jtag_axi_wrapper
   import jtag_axi_pkg::*;
@@ -19,7 +19,10 @@ module jtag_axi_wrapper
   input                               tms,
   input                               tdi,
   output  logic                       tdo,
+  // Additional IOs
   output  logic [(IC_RST_WIDTH-1):0]  ic_rst,
+  input   logic [31:0]                usercode_i,
+  output  logic                       usercode_update_o,
   // AXI
   input                               clk_axi,
   input                               ares_axi,
@@ -42,6 +45,8 @@ module jtag_axi_wrapper
     .tdi              (tdi),
     .tdo              (tdo),
     .ic_rst           (ic_rst),
+    .usercode_i       (usercode_i),
+    .usercode_update_o(usercode_update_o),
     // To/From AXI I/F
     .jtag_status_i    (jtag_status),
     .axi_status_rd_o  (axi_status_rd),

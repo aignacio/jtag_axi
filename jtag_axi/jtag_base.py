@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 20.09.2024
-# Last Modified Date: 29.09.2024
+# Last Modified Date: 30.09.2024
 from enum import Enum
 from abc import abstractmethod
 
@@ -30,6 +30,7 @@ class InstJTAG(Enum):
     CTRL_AXI_REG = ("0b0100", 8, AccessMode.RW, 0xC7)
     STATUS_AXI_REG = ("0b0101", 36, AccessMode.RO, 0xF_FFFF_FFFF)
     WSTRB_AXI_REG = ("0b0011", 4, AccessMode.RW, 0xF)
+    USERCODE = ("0b0111", 32, AccessMode.RO, 0xFFFF_FFFF)
 
 
 # JTAG TAP Controller States
@@ -194,6 +195,7 @@ class BaseJtagToAXI:
         self.wstrb_axi_jdr = 0
         self.ctrl_axi_jdr = JDRCtrlAXI()
         self.status_axi_jdr = 0
+        self.usercode_jdr = 0
         self.async_fifo_depth = async_fifo_depth
         self.tap_state = JTAGState.TEST_LOGIC_RESET
 

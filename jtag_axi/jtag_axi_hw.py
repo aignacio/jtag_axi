@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 15.09.2024
-# Last Modified Date: 29.09.2024
+# Last Modified Date: 30.09.2024
 import os
 from .jtag_base import *
 from enum import Enum
@@ -91,6 +91,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
 
     def read_jdrs(self):
         self.idcode_jdr = self._get_jdr(InstJTAG.IDCODE)
+        self.usercode_jdr = self._get_jdr(InstJTAG.USERCODE)
         self.ic_reset_jdr = self._get_jdr(InstJTAG.IC_RESET)
         self.addr_axi_jdr = self._get_jdr(InstJTAG.ADDR_AXI_REG)
         self.data_write_axi_jdr = self._get_jdr(InstJTAG.DATA_W_AXI_REG)
@@ -100,6 +101,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
 
         print(f"\n[JTAG_to_AXI] ---- Print JDRs ----")
         print(f"[JTAG_to_AXI] IDCODE     \t{hex(self.idcode_jdr)}")
+        print(f"[JTAG_to_AXI] USERCODE   \t{hex(self.usercode_jdr)}")
         print(f"[JTAG_to_AXI] IC_RESET   \t{hex(self.ic_reset_jdr)}")
         print(f"[JTAG_to_AXI] ADDR_AXI   \t{hex(self.addr_axi_jdr)}")
         print(f"[JTAG_to_AXI] DATA_AXI   \t{hex(self.data_write_axi_jdr)}")

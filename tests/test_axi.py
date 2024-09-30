@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson Ignacio da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 12.07.2023
-# Last Modified Date: 28.09.2024
+# Last Modified Date: 30.09.2024
 import cocotb
 import logging
 import pytest
@@ -91,6 +91,7 @@ async def run_test(dut, idle_generator=None, backpressure_generator=None):
         axi_ram.read_if.ar_channel.set_pause_generator(backpressure_generator())
 
     jtag = SimJtagToAXI(dut, freq=10e6, addr_width=32, data_width=data_width)
+    jtag.read_jdrs()
 
     dut.ares_axi.value = 1
     await ClockCycles(dut.clk_axi, 10)
