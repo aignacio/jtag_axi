@@ -60,7 +60,8 @@ class JtagToAXIFTDI(BaseJtagToAXI):
             print(f"[JTAG_to_AXI] AXI Address width\t{self.addr_width}")
             print(f"[JTAG_to_AXI] AXI Data width  \t{self.data_width}")
             print(f"[JTAG_to_AXI] AFIFO Depth  \t{self.async_fifo_depth}")
-            print(f"[JTAG_to_AXI] IC Reset width  \t{self.ic_reset_width}")
+            print(f"[JTAG_to_AXI] IC RESET width  \t{self.ic_reset_width}")
+            print(f"[JTAG_to_AXI] USERDATA width  \t{self.userdata_width}")
 
         self.idcode_jdr = self._get_jdr(InstJTAG.IDCODE)
         self.ic_reset_jdr = self._get_jdr(InstJTAG.IC_RESET)
@@ -69,6 +70,8 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         self.status_axi_jdr = self._get_jdr(InstJTAG.STATUS_AXI_REG)
         self.ctrl_axi_jdr = self._get_jdr(InstJTAG.CTRL_AXI_REG)
         self.wstrb_axi_jdr = self._get_jdr(InstJTAG.WSTRB_AXI_REG)
+        self.usercode_jdr = self._get_jdr(InstJTAG.USERCODE)
+        self.userdata_jdr = self._get_jdr(InstJTAG.USERDATA)
 
     def reset(self):
         """Reset the JTAG interface."""
@@ -98,6 +101,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         self.status_axi_jdr = self._get_jdr(InstJTAG.STATUS_AXI_REG)
         self.ctrl_axi_jdr = self._get_jdr(InstJTAG.CTRL_AXI_REG)
         self.wstrb_axi_jdr = self._get_jdr(InstJTAG.WSTRB_AXI_REG)
+        self.userdata_jdr = self._get_jdr(InstJTAG.USERDATA)
 
         print(f"\n[JTAG_to_AXI] ---- Print JDRs ----")
         print(f"[JTAG_to_AXI] IDCODE     \t{hex(self.idcode_jdr)}")
@@ -107,6 +111,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         print(f"[JTAG_to_AXI] DATA_AXI   \t{hex(self.data_write_axi_jdr)}")
         print(f"[JTAG_to_AXI] CTRL_AXI   \t{hex(self.ctrl_axi_jdr)}")
         print(f"[JTAG_to_AXI] WSTRB_AXI  \t{hex(self.wstrb_axi_jdr)}")
+        print(f"[JTAG_to_AXI] USERDATA   \t{hex(self.userdata_jdr)}")
 
     def _shift_jdr(self, jdr: InstJTAG, val: int):
         if self.debug:
@@ -117,6 +122,12 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         self.jtag.change_state("shift_ir")
         retval = self.jtag.shift_and_update_register(instruction)
         # self.jtag.go_idle()
+        jdr_value = BitSequence(val, msb=False, length=jdr.value[1])
+        self.jtag.change_state("shift_dr")
+        jdr_value = self.jtag.shift_and_update_register(jdr_value)
+        return int(jdr_value)
+
+    def _shift_data_only(self, jdr: InstJTAG, val: int):
         jdr_value = BitSequence(val, msb=False, length=jdr.value[1])
         self.jtag.change_state("shift_dr")
         jdr_value = self.jtag.shift_and_update_register(jdr_value)
@@ -283,3 +294,23 @@ class JtagToAXIFTDI(BaseJtagToAXI):
             print(f"[JTAG_to_AXI] Writing {value} in IC_RESET JDR")
         self._shift_jdr(InstJTAG.IC_RESET, value)
         self.ic_reset_jdr = value
+
+    def write_userdata(self, value):
+        if value >= 2**self.userdata_width:
+            raise ValueError(
+                f"[JTAG_to_AXI] Value to write on USERDATA ({value}) is greater than max {2**self.userdata_width}"
+            )
+        if self.debug:
+            print(f"[JTAG_to_AXI] Writing {value} in USERDATA JDR")
+        self._shift_jdr(InstJTAG.USERDATA, value)
+        self.usercode_jdr = value
+
+    def write_fwd_userdata(self, value):
+        if value >= 2**self.userdata_width:
+            raise ValueError(
+                f"[JTAG_to_AXI] Value to write on USERDATA ({value}) is greater than max {2**self.userdata_width}"
+            )
+        if self.debug:
+            print(f"[JTAG_to_AXI] Writing {value} in USERDATA JDR")
+        self.usercode_jdr = value
+        return self._shift_data_only(InstJTAG.USERDATA, value)

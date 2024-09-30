@@ -190,6 +190,7 @@ class SimJtagToAXI(BaseJtagToAXI):
         self.ctrl_axi_jdr = hex(await self._get_jdr(InstJTAG.CTRL_AXI_REG))
         self.wstrb_axi_jdr = hex(await self._get_jdr(InstJTAG.WSTRB_AXI_REG))
         self.usercode_jdr = hex(await self._get_jdr(InstJTAG.USERCODE))
+        self.userdata_jdr = hex(await self._get_jdr(InstJTAG.USERDATA))
 
         self.dut.log.info("---------------------------------")
         self.dut.log.info("|=> JDR - JTAG Data Registers <=|")
@@ -201,6 +202,7 @@ class SimJtagToAXI(BaseJtagToAXI):
         self.dut.log.info(f"- CTRL_AXI   \t{self.ctrl_axi_jdr}")
         self.dut.log.info(f"- WSTRB_AXI  \t{self.wstrb_axi_jdr}")
         self.dut.log.info(f"- USERCODE   \t{self.usercode_jdr}")
+        self.dut.log.info(f"- USERDATA   \t{self.userdata_jdr}")
 
     async def _shift_addr_axi(self, value: int):
         self.addr_axi_jdr = value
@@ -311,3 +313,16 @@ class SimJtagToAXI(BaseJtagToAXI):
                 await self._shift_status_axi(JDRStatusAXI())
             )
         return status_axi
+
+    async def write_userdata(self, value):
+        self.userdata_jdr = value
+        return await self._shift_jdr(InstJTAG.USERDATA, value)
+
+    async def write_fwd_userdata(self, value):
+        self.userdata_jdr = value
+        return await self._shift_dr(value, InstJTAG.USERDATA.value[1])
+
+    async def write_read_ic_reset(self, value):
+        self.ic_reset_jdr = value
+        return await self._shift_jdr(InstJTAG.IC_RESET, value)
+

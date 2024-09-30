@@ -32,6 +32,7 @@ class InstJTAG(Enum):
     WSTRB_AXI_REG = ("0b0011", 4, AccessMode.RW, 0xF)
     USERCODE = ("0b0111", 32, AccessMode.RO, 0xFFFF_FFFF)
     USERDATA = ("0b0110", 4, AccessMode.RW, 0xF)
+    #USERDATA = ("0b0110", 64, AccessMode.RW, 0xFFFF_FFFF_FFFF_FFFF)
 
 
 # JTAG TAP Controller States
@@ -183,11 +184,13 @@ class BaseJtagToAXI:
         data_width: int = 32,
         async_fifo_depth: int = 4,
         ic_reset_width: int = 4,
+        userdata_width: int = 4,
     ):
         """Initialize the interface (for hardware or DUT)."""
         self.addr_width = addr_width
         self.data_width = data_width
         self.ic_reset_width = ic_reset_width
+        self.userdata_width = userdata_width
         # Initialize JDR values
         self.idcode_jdr = 0
         self.ic_reset_jdr = 0
@@ -197,6 +200,7 @@ class BaseJtagToAXI:
         self.ctrl_axi_jdr = JDRCtrlAXI()
         self.status_axi_jdr = 0
         self.usercode_jdr = 0
+        self.userdata_jdr = 0
         self.async_fifo_depth = async_fifo_depth
         self.tap_state = JTAGState.TEST_LOGIC_RESET
 

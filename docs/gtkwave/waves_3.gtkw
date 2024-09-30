@@ -1,0 +1,64 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Mon Sep 30 18:49:05 2024
+[*]
+[dumpfile] "run_dir/test_userdata_verilator/dump.fst"
+[dumpfile_mtime] "Mon Sep 30 18:44:34 2024"
+[dumpfile_size] 8881
+[savefile] "/Users/aignacio/projects/jtag_axi/docs/gtkwave/waves_3.gtkw"
+[timestart] 0
+[size] 2184 977
+[pos] 872 611
+*-28.291101 425000000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] .
+[treeopen] .jtag_axi_wrapper_tb.
+[treeopen] .jtag_axi_wrapper_tb.u_jtag_axi_wrapper.
+[treeopen] .jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.
+[treeopen] .jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.
+[sst_width] 253
+[signals_width] 246
+[sst_expanded] 1
+[sst_vpaned_height] 429
+@28
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.trstn
+jtag_axi_wrapper_tb.tck
+@29
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.tms
+@28
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.tdi
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.tdo
+@100000028
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_instruction_register.ir_ff[3:0]
+@22
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.u_jtag_tap_wrapper.u_data_registers.userdata_ff[3:0]
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.userdata_o[3:0]
+@28
+jtag_axi_wrapper_tb.u_jtag_axi_wrapper.userdata_update_o
+[pattern_trace] 1
+[pattern_trace] 0
