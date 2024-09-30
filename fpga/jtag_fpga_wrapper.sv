@@ -2,9 +2,11 @@ module jtag_fpga_wrapper
   import jtag_axi_pkg::*;
   import amba_axi_pkg::*;
 #(
-  parameter [31:0]  IDCODE_VAL    = 'hBADC0FFE,
-  parameter int     IC_RST_WIDTH  = 4,
-  parameter int     AXI_MASTER_ID = 1
+  parameter [31:0]  IDCODE_VAL     = 'hBADC0FFE,
+  parameter int     IC_RST_WIDTH   = 4,
+  parameter int     USERDATA_WIDTH = 4,
+  parameter int     AXI_MASTER_ID  = 1,
+  parameter int     AXI_TIMEOUT_CC = 4096
 )(
   input                               trstn,
   input                               tck,
@@ -25,7 +27,9 @@ module jtag_fpga_wrapper
   jtag_axi_wrapper #(
     .IDCODE_VAL               (IDCODE_VAL),
     .IC_RST_WIDTH             (IC_RST_WIDTH),
-    .AXI_MASTER_ID            (AXI_MASTER_ID)
+    .USERDATA_WIDTH           (USERDATA_WIDTH),
+    .AXI_MASTER_ID            (AXI_MASTER_ID),
+    .AXI_TIMEOUT_CC           (AXI_TIMEOUT_CC)
   ) u_jtag_axi_wrapper (
     .trstn                    (trstn),
     .tck                      (tck),
@@ -33,6 +37,10 @@ module jtag_fpga_wrapper
     .tdi                      (tdi),
     .tdo                      (tdo),
     .ic_rst                   (ic_rst),
+    .usercode_i               ('hBEEF_BEEF),
+    .usercode_update_o        (),
+    .userdata_o               (),
+    .userdata_update_o        (),
     .clk_axi                  (clk_axi),
     .ares_axi                 (ares_axi),
     .jtag_axi_mosi_o          (masters_axi_mosi),
