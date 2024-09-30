@@ -8,23 +8,26 @@
 module jtag_axi_tap_wrapper
   import jtag_axi_pkg::*;
 #(
-  parameter [31:0]  IDCODE_VAL    = 'hBADC0FFE,
-  parameter int     IC_RST_WIDTH  = 4
+  parameter [31:0]  IDCODE_VAL     = 'hBADC0FFE,
+  parameter int     IC_RST_WIDTH   = 4,
+  parameter int     USERDATA_WIDTH = 4
 )(
-  input                               trstn,
-  input                               tck,
-  input                               tms,
-  input                               tdi,
-  output                              tdo,
-  output  logic [(IC_RST_WIDTH-1):0]  ic_rst,
-  input   logic [31:0]                usercode_i,
-  output  logic                       usercode_update_o,
+  input                                 trstn,
+  input                                 tck,
+  input                                 tms,
+  input                                 tdi,
+  output                                tdo,
+  output  logic [(IC_RST_WIDTH-1):0]    ic_rst,
+  input   logic [31:0]                  usercode_i,
+  output  logic                         usercode_update_o,
+  output  logic [(USERDATA_WIDTH-1):0]  userdata_o,
+  output  logic                         userdata_update_o,
   // To AXI I/F
-  input   s_axi_jtag_status_t         jtag_status_i,
-  output  logic                       axi_status_rd_o, // Ack last status
-  input   axi_afifo_t                 afifo_slots_i,
-  output  s_axi_jtag_info_t           axi_info_o,
-  output  logic                       axi_req_new_o // Dispatch a new txn when assert
+  input   s_axi_jtag_status_t           jtag_status_i,
+  output  logic                         axi_status_rd_o, // Ack last status
+  input   axi_afifo_t                   afifo_slots_i,
+  output  s_axi_jtag_info_t             axi_info_o,
+  output  logic                         axi_req_new_o // Dispatch a new txn when assert
 );
   tap_ctrl_fsm_t    tap_state;
   ir_decoding_t     ir_dec;
@@ -53,7 +56,8 @@ module jtag_axi_tap_wrapper
 
   jtag_axi_data_registers #(
     .IDCODE_VAL       (IDCODE_VAL),
-    .IC_RST_WIDTH     (IC_RST_WIDTH)
+    .IC_RST_WIDTH     (IC_RST_WIDTH),
+    .USERDATA_WIDTH   (USERDATA_WIDTH)
   ) u_data_registers (
     .trstn            (trstn),
     .tck              (tck),
@@ -65,6 +69,8 @@ module jtag_axi_tap_wrapper
     .ic_rst           (ic_rst),
     .usercode_i       (usercode_i),
     .usercode_update_o(usercode_update_o),
+    .userdata_o       (userdata_o),
+    .userdata_update_o(userdata_update_o), 
     .jtag_status_i    (jtag_status_i),
     .axi_status_rd_o  (axi_status_rd_o),
     .afifo_slots_i    (afifo_slots_i),

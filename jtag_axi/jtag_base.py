@@ -31,6 +31,7 @@ class InstJTAG(Enum):
     STATUS_AXI_REG = ("0b0101", 36, AccessMode.RO, 0xF_FFFF_FFFF)
     WSTRB_AXI_REG = ("0b0011", 4, AccessMode.RW, 0xF)
     USERCODE = ("0b0111", 32, AccessMode.RO, 0xFFFF_FFFF)
+    USERDATA = ("0b0110", 4, AccessMode.RW, 0xF)
 
 
 # JTAG TAP Controller States

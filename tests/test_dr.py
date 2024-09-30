@@ -129,6 +129,7 @@ if cocotb.SIM_NAME:
             InstJTAG.STATUS_AXI_REG,
             InstJTAG.WSTRB_AXI_REG,
             InstJTAG.USERCODE,
+            InstJTAG.USERDATA,
         ],
     )
     factory.generate_tests()

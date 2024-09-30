@@ -39,7 +39,8 @@ package jtag_axi_pkg;
     WSTRB_AXI_REG   = 'b0011,
     CTRL_AXI_REG    = 'b0100,
     STATUS_AXI_REG  = 'b0101,
-    USERCODE        = 'b0111
+    USERCODE        = 'b0111,
+    USERDATA        = 'b0110
   } ir_decoding_t;
 
   // --------------------------
