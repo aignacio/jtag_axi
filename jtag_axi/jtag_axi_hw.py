@@ -4,7 +4,7 @@
 # License           : MIT license <Check LICENSE>
 # Author            : Anderson I. da Silva (aignacio) <anderson@aignacio.com>
 # Date              : 15.09.2024
-# Last Modified Date: 30.09.2024
+# Last Modified Date: 01.10.2024
 import os
 from .jtag_base import *
 from enum import Enum
@@ -12,6 +12,8 @@ from pyftdi.jtag import JtagEngine, JtagTool
 from pyftdi.ftdi import Ftdi
 from os import environ
 from pyftdi.bits import BitSequence
+from pyftdi.usbtools import UsbToolsError
+from contextlib import suppress 
 
 
 def bin_to_num(binary_list):
@@ -39,7 +41,12 @@ class JtagToAXIFTDI(BaseJtagToAXI):
     ):
         super().__init__(**kwargs)
         self.ftdi = Ftdi()
-        self.ftdi.open_from_url(device)
+
+        try:
+            self.ftdi.open_from_url(device)
+        except UsbToolsError:
+            print(f"[JTAG_to_AXI] Could not find the JTAG Adapter specified")
+            self.ftdi.show_devices()
 
         self.jtag = JtagEngine(trst=trst, frequency=freq)
         self.jtag.configure(environ.get("FTDI_DEVICE", device))
@@ -303,7 +310,7 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         if self.debug:
             print(f"[JTAG_to_AXI] Writing {value} in USERDATA JDR")
         self._shift_jdr(InstJTAG.USERDATA, value)
-        self.usercode_jdr = value
+        self.userdata_jdr = value
 
     def write_fwd_userdata(self, value):
         if value >= 2**self.userdata_width:
@@ -312,5 +319,5 @@ class JtagToAXIFTDI(BaseJtagToAXI):
             )
         if self.debug:
             print(f"[JTAG_to_AXI] Writing {value} in USERDATA JDR")
-        self.usercode_jdr = value
+        self.userdata_jdr = value
         return self._shift_data_only(InstJTAG.USERDATA, value)
