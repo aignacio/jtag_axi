@@ -2,19 +2,22 @@
 # JTAG to AXI master
 
 ## Table of Contents
-* [Description](#intro)
+* [Description](#desc)
 * [Encoding of AXI registers](#axi_drs)
 * [License](#lic)
 
 ![rtluarch](docs/jtag_axi_bd.svg)
 
-## <a name="intro"></a> Description
+## <a name="desc"></a> Description
 
 This design implements a JTAG interface that is capable of dispatching AXI Lite transactions into an AXI bus. Its main ob
 jectives are:
 
 1. To debug SoC peripherals connected to an AXI bus - dispatch read / write single beat burst AXI transactions.
 2. Program memories in SoCs to act as a bootloader interface.
+
+
+## <a name="jdrs"></a> JTAG Data Registers - JDRs
 
 |    **Name**    | **Encoding (4 bits)** | **Access (RW/RO)** |      **Bit length**      |                       **Description**                       |
 |:--------------:|:---------------------:|:------------------:|:------------------------:|:-----------------------------------------------------------:|
