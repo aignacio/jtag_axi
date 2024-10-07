@@ -13,7 +13,8 @@ on:
 
 jobs:
   build:
-    runs-on: [self-hosted, ubuntu-22.04]
+    runs-on: self-hosted
+    #runs-on: ubuntu-22.04
 
     strategy:
       matrix:
@@ -51,5 +52,6 @@ jobs:
       run: pip install --upgrade nox
     - name: Run nox tests
       run: nox -s "run-${{ matrix.python-version }}"
-
-
+    - name: Clean workspace
+      run: |
+        rm -rf ${{ github.workspace }}/*
