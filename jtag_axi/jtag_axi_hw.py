@@ -92,7 +92,8 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         retval = self.jtag.shift_and_update_register(instruction)
         self.jtag.go_idle()
         self.jtag.change_state("shift_dr")
-        jdr_value = self.jtag.shift_and_update_register(BitSequence("0" * jdr.value[1]))
+        jdr_len = self._dr_length(jdr)
+        jdr_value = self.jtag.shift_and_update_register(BitSequence("0" * jdr_len))
         # Shift back the old value that we replaced with 0s
         self.jtag.change_state("shift_dr")
         jdr_value_new = self.jtag.shift_and_update_register(jdr_value)
@@ -129,13 +130,13 @@ class JtagToAXIFTDI(BaseJtagToAXI):
         self.jtag.change_state("shift_ir")
         retval = self.jtag.shift_and_update_register(instruction)
         # self.jtag.go_idle()
-        jdr_value = BitSequence(val, msb=False, length=jdr.value[1])
+        jdr_value = BitSequence(val, msb=False, length=self._dr_length(jdr))
         self.jtag.change_state("shift_dr")
         jdr_value = self.jtag.shift_and_update_register(jdr_value)
         return int(jdr_value)
 
     def _shift_data_only(self, jdr: InstJTAG, val: int):
-        jdr_value = BitSequence(val, msb=False, length=jdr.value[1])
+        jdr_value = BitSequence(val, msb=False, length=self._dr_length(jdr))
         self.jtag.change_state("shift_dr")
         jdr_value = self.jtag.shift_and_update_register(jdr_value)
         return int(jdr_value)
@@ -220,12 +221,14 @@ class JtagToAXIFTDI(BaseJtagToAXI):
             print(
                 f"[JTAG_to_AXI] Current AFIFO size: {current.fifo_ocup} / {self.async_fifo_depth}"
             )
-        status_axi = JDRStatusAXI.from_jdr(self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0))
+        status_axi = JDRStatusAXI.from_jdr(
+            self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0), data_width=self.data_width
+        )
         while status_axi.status == JTAGToAXIStatus.JTAG_RUNNING:
             if self.debug:
                 print(f"[JTAG_to_AXI] Waiting TXN to complete: " f"{status_axi.status}")
             status_axi = JDRStatusAXI.from_jdr(
-                self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0)
+                self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0), data_width=self.data_width
             )
         return status_axi
 
@@ -283,12 +286,14 @@ class JtagToAXIFTDI(BaseJtagToAXI):
             print(
                 f"[JTAG_to_AXI] Current AFIFO size: {current.fifo_ocup} / {self.async_fifo_depth}"
             )
-        status_axi = JDRStatusAXI.from_jdr(self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0))
+        status_axi = JDRStatusAXI.from_jdr(
+            self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0), data_width=self.data_width
+        )
         while status_axi.status == JTAGToAXIStatus.JTAG_RUNNING:
             if self.debug:
                 print(f"[JTAG_to_AXI] Waiting TXN to complete: {status_axi.status}")
             status_axi = JDRStatusAXI.from_jdr(
-                self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0)
+                self._shift_jdr(InstJTAG.STATUS_AXI_REG, 0), data_width=self.data_width
             )
         return status_axi
 

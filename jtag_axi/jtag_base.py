@@ -8,9 +8,6 @@
 from enum import Enum
 from abc import abstractmethod
 
-_AXI_ADDR_WIDTH = 32
-_AXI_DATA_WIDTH = 32
-
 
 class AccessMode(Enum):
     RW = 1
@@ -146,8 +143,11 @@ class JDRStatusAXI:
         self,
         data_rd=0,
         status=0,
+        data_width: int = 32,
     ):
-        self.data_rd = data_rd & bits_to_ff_hex(_AXI_DATA_WIDTH)
+        # Mask based on the configured data width (rounded to bytes)
+        self.data_width = data_width
+        self.data_rd = data_rd & bits_to_ff_hex(data_width)
         self.status = JTAGToAXIStatus(status & 0xF)  # 4 bits
 
     def get_jdr(self):
@@ -159,13 +159,13 @@ class JDRStatusAXI:
         return jdr
 
     @classmethod
-    def from_jdr(cls, jdr_value):
+    def from_jdr(cls, jdr_value, data_width: int = 32):
         """
         Takes an 36-bit value and decodes it into the class attributes.
         """
-        data_rd_new = (jdr_value >> 4) & bits_to_ff_hex(_AXI_DATA_WIDTH)
+        data_rd_new = (jdr_value >> 4) & bits_to_ff_hex(data_width)
         status_new = jdr_value & 0xF
-        return cls(data_rd=data_rd_new, status=status_new)
+        return cls(data_rd=data_rd_new, status=status_new, data_width=data_width)
 
     def __str__(self):
         return f"DATA RD: {hex(self.data_rd)}, STATUS: {self.status}"
@@ -266,6 +266,29 @@ class BaseJtagToAXI:
                 JTAGState.SELECT_DR_SCAN: [1],
             },
         }
+
+    def _dr_length(self, jdr: InstJTAG) -> int:
+        """Resolve the DR shift length dynamically based on instance configuration.
+
+        Falls back to the enum-provided length to preserve backward compatibility
+        for DRs that do not depend on runtime configuration.
+        """
+        if jdr is InstJTAG.ADDR_AXI_REG:
+            return self.addr_width
+        if jdr is InstJTAG.DATA_W_AXI_REG:
+            return self.data_width
+        if jdr is InstJTAG.IC_RESET:
+            return self.ic_reset_width
+        if jdr is InstJTAG.USERDATA:
+            return self.userdata_width
+        # Derive widths from data width when applicable
+        if jdr is InstJTAG.WSTRB_AXI_REG:
+            return max(1, self.data_width // 8)
+        if jdr is InstJTAG.STATUS_AXI_REG:
+            # STATUS = {data_rd[data_width-1:0], status[3:0]}
+            return self.data_width + 4
+        # Default to enum-specified length
+        return jdr.value[1]
 
     def _convert_size(self, value):
         """Convert byte size into asize."""

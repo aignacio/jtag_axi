@@ -172,13 +172,14 @@ class SimJtagToAXI(BaseJtagToAXI):
 
     async def _shift_jdr(self, jdr: InstJTAG, value: int):
         tdo = await self._shift_ir(jdr)
-        tdo = await self._shift_dr(value, jdr.value[1])
+        tdo = await self._shift_dr(value, self._dr_length(jdr))
         return bin_to_num(tdo)
 
     async def _get_jdr(self, jdr: InstJTAG):
         tdo = await self._shift_ir(jdr)
-        old = bin_to_num(await self._shift_dr(0x00, jdr.value[1]))
-        tdo = await self._shift_dr(old, jdr.value[1])
+        length = self._dr_length(jdr)
+        old = bin_to_num(await self._shift_dr(0x00, length))
+        tdo = await self._shift_dr(old, length)
         return old
 
     async def read_jdrs(self):
@@ -272,10 +273,14 @@ class SimJtagToAXI(BaseJtagToAXI):
             f"[JTAG to AXI][WRITE] Addr = {hex(address)} / Data = {hex(data)}"
             f" Size = {self._convert_size(size)} / WrStrb = {bin(wstrb)}"
         )
-        status_axi = JDRStatusAXI.from_jdr(await self._shift_status_axi(JDRStatusAXI()))
+        status_axi = JDRStatusAXI.from_jdr(
+            await self._shift_status_axi(JDRStatusAXI(data_width=self.data_width)),
+            data_width=self.data_width,
+        )
         while status_axi.status == JTAGToAXIStatus.JTAG_RUNNING:
             status_axi = JDRStatusAXI.from_jdr(
-                await self._shift_status_axi(JDRStatusAXI())
+                await self._shift_status_axi(JDRStatusAXI(data_width=self.data_width)),
+                data_width=self.data_width,
             )
         return status_axi
 
@@ -307,10 +312,14 @@ class SimJtagToAXI(BaseJtagToAXI):
             f"[JTAG to AXI][READ] Addr = {hex(address)} / Size = {self._convert_size(size)}"
         )
 
-        status_axi = JDRStatusAXI.from_jdr(await self._shift_status_axi(JDRStatusAXI()))
+        status_axi = JDRStatusAXI.from_jdr(
+            await self._shift_status_axi(JDRStatusAXI(data_width=self.data_width)),
+            data_width=self.data_width,
+        )
         while status_axi.status == JTAGToAXIStatus.JTAG_RUNNING:
             status_axi = JDRStatusAXI.from_jdr(
-                await self._shift_status_axi(JDRStatusAXI())
+                await self._shift_status_axi(JDRStatusAXI(data_width=self.data_width)),
+                data_width=self.data_width,
             )
         return status_axi
 
@@ -320,9 +329,8 @@ class SimJtagToAXI(BaseJtagToAXI):
 
     async def write_fwd_userdata(self, value):
         self.userdata_jdr = value
-        return await self._shift_dr(value, InstJTAG.USERDATA.value[1])
+        return await self._shift_dr(value, self._dr_length(InstJTAG.USERDATA))
 
     async def write_read_ic_reset(self, value):
         self.ic_reset_jdr = value
         return await self._shift_jdr(InstJTAG.IC_RESET, value)
-
