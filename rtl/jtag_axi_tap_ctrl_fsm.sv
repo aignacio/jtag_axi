@@ -5,7 +5,7 @@
  * Date              : 04.11.2023
  * Last Modified Date: 11.09.2024
  */
-module jtag_axi_tap_ctrl_fsm 
+module jtag_axi_tap_ctrl_fsm
   import jtag_axi_pkg::*;
 (
   input                 trstn,
@@ -17,9 +17,9 @@ module jtag_axi_tap_ctrl_fsm
 
   always_comb begin
     tap_state = fsm_ff;
-    next_fsm = fsm_ff;
+    next_fsm  = fsm_ff;
 
-    unique case (fsm_ff)
+    case (fsm_ff)
       TEST_LOGIC_RESET: begin
         if (tms == 1'b0) begin
           next_fsm = RUN_TEST_IDLE;
@@ -130,10 +130,11 @@ module jtag_axi_tap_ctrl_fsm
           next_fsm = RUN_TEST_IDLE;
         end
       end
+      default: next_fsm = TEST_LOGIC_RESET;
     endcase
   end
 
-  always_ff @ (posedge tck or negedge trstn) begin
+  always_ff @(posedge tck or negedge trstn) begin
     if (trstn == 1'b0) begin
       fsm_ff <= TEST_LOGIC_RESET;
     end
