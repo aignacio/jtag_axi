@@ -9,45 +9,42 @@ module jtag_axi_data_registers
   import jtag_axi_pkg::*;
   import amba_axi_pkg::*;
 #(
-  parameter [31:0]  IDCODE_VAL     = 'hBADC0FFE,
-  parameter int     IC_RST_WIDTH   = 4,
-  parameter int     USERDATA_WIDTH = 4
-)(
-  input                                 trstn,
-  input                                 tck,
-  input                                 tdi,
-  output  logic                         tdo,
-  input   tap_ctrl_fsm_t                tap_state,
-  input   ir_decoding_t                 ir_dec,
+  parameter     [31:0] IDCODE_VAL     = 'hBADC0FFE,
+  parameter int        IC_RST_WIDTH   = 4,
+  parameter int        USERDATA_WIDTH = 4
+) (
+  input                                             trstn,
+  input                                             tck,
+  input                                             tdi,
+  output logic                                      tdo,
+  input  tap_ctrl_fsm_t                             tap_state,
+  input  ir_decoding_t                              ir_dec,
   // Data Register output/input
-  output  logic [(IC_RST_WIDTH-1):0]    ic_rst,
-  input   logic [31:0]                  usercode_i,
-  output  logic                         usercode_update_o,
-  output  logic [(USERDATA_WIDTH-1):0]  userdata_o,
-  output  logic                         userdata_update_o,
+  output logic               [  (IC_RST_WIDTH-1):0] ic_rst,
+  input  logic               [                31:0] usercode_i,
+  output logic                                      usercode_update_o,
+  output logic               [(USERDATA_WIDTH-1):0] userdata_o,
+  output logic                                      userdata_update_o,
   // To AXI I/F
-  input   s_axi_jtag_status_t           jtag_status_i,
-  output  logic                         axi_status_rd_o, // Ack last status
-  input   axi_afifo_t                   afifo_slots_i,
-  output  s_axi_jtag_info_t             axi_info_o,
-  output  logic                         axi_req_new_o // Dispatch a new txn when assert
+  input  s_axi_jtag_status_t                        jtag_status_i,
+  output logic                                      axi_status_rd_o,    // Ack last status
+  input  axi_afifo_t                                afifo_slots_i,
+  output s_axi_jtag_info_t                          axi_info_o,
+  output logic                                      axi_req_new_o       // Dispatch a new txn when assert
 );
   function automatic int get_greater_width;
     input int a, b, c, d;
     int max_ab, max_cd, max_final;
     begin
-      max_ab = (a > b) ? a : b;
-      max_cd = (c > d) ? c : d;
+      max_ab    = (a > b) ? a : b;
+      max_cd    = (c > d) ? c : d;
       max_final = (max_ab > max_cd) ? max_ab : max_cd;
       return max_final;
     end
   endfunction
 
   // Needs to be the largest DR...
-  localparam DR_MAX_WIDTH = get_greater_width($bits(s_axi_jtag_status_t),
-                                              $bits(axi_addr_t),
-                                              IC_RST_WIDTH,
-                                              USERDATA_WIDTH);
+  localparam DR_MAX_WIDTH = get_greater_width(IC_RST_WIDTH, USERDATA_WIDTH);
 
   logic bypass_ff, next_bypass;
   logic bypass_n_ff;
@@ -67,28 +64,28 @@ module jtag_axi_data_registers
   logic userdata_up_ff, next_userdata_up;
 
   always_comb begin
-    ic_rst = ic_rst_ff;
-    axi_info_o = axi_info_ff;
-    axi_status_rd_o = axi_status_rd_ff;
-    axi_req_new_o = axi_req_ff;
-    userdata_o = userdata_ff;
+    ic_rst            = ic_rst_ff;
+    axi_info_o        = axi_info_ff;
+    axi_status_rd_o   = axi_status_rd_ff;
+    axi_req_new_o     = axi_req_ff;
+    userdata_o        = userdata_ff;
     userdata_update_o = userdata_up_ff;
   end
 
   always_comb begin
-    tdo = 1'b0;
+    tdo                          = 1'b0;
 
-    usercode_update_o = 1'b0;
-    next_axi_status_rd = 1'b0;
-    next_axi_req = 1'b0;
-    next_bypass = bypass_ff;
-    next_idcode = idcode_ff;
-    next_ic_rst = ic_rst_ff;
-    next_userdata = userdata_ff;
-    next_userdata_up = 1'b0;
-    next_axi_info = axi_info_ff;
+    usercode_update_o            = 1'b0;
+    next_axi_status_rd           = 1'b0;
+    next_axi_req                 = 1'b0;
+    next_bypass                  = bypass_ff;
+    next_idcode                  = idcode_ff;
+    next_ic_rst                  = ic_rst_ff;
+    next_userdata                = userdata_ff;
+    next_userdata_up             = 1'b0;
+    next_axi_info                = axi_info_ff;
     next_axi_info.ctrl.fifo_ocup = afifo_slots_i;
-    next_sr = sr_ff;
+    next_sr                      = sr_ff;
 
     /* verilator lint_off CASEINCOMPLETE */
     unique0 case (ir_dec)
@@ -105,7 +102,7 @@ module jtag_axi_data_registers
         end
         else if (tap_state == SHIFT_DR) begin
           next_bypass = tdi;
-          tdo = bypass_n_ff;
+          tdo         = bypass_n_ff;
         end
         else if (tap_state == EXIT1_DR) begin
           tdo = bypass_n_ff;
@@ -125,8 +122,8 @@ module jtag_axi_data_registers
           next_idcode = IDCODE_VAL;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_idcode = {tdi,idcode_ff[31:1]};
-          tdo = idcode_n_ff[0];
+          next_idcode = {tdi, idcode_ff[31:1]};
+          tdo         = idcode_n_ff[0];
         end
         else if (tap_state == EXIT1_DR) begin
           tdo = idcode_n_ff[0];
@@ -137,8 +134,8 @@ module jtag_axi_data_registers
           next_sr = '0;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr = {tdi,sr_ff[(DR_MAX_WIDTH-1):1]};
-          tdo = sr_n_ff[0];
+          next_sr = {tdi, sr_ff[(DR_MAX_WIDTH-1):1]};
+          tdo     = sr_n_ff[0];
         end
         else if (tap_state == EXIT1_DR) begin
           tdo = sr_n_ff[0];
@@ -149,8 +146,8 @@ module jtag_axi_data_registers
           next_sr[31:0] = usercode_i;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[31:0] = {tdi,sr_ff[31:1]};
-          tdo = sr_n_ff[0];
+          next_sr[31:0] = {tdi, sr_ff[31:1]};
+          tdo           = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
           usercode_update_o = 1'b1;
@@ -169,8 +166,8 @@ module jtag_axi_data_registers
           next_sr[(IC_RST_WIDTH-1):0] = ic_rst_ff;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[(IC_RST_WIDTH-1):0] = {tdi,sr_ff[(IC_RST_WIDTH-1):1]};
-          tdo = sr_n_ff[0];
+          next_sr[(IC_RST_WIDTH-1):0] = {tdi, sr_ff[(IC_RST_WIDTH-1):1]};
+          tdo                         = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
           next_ic_rst = sr_ff[(IC_RST_WIDTH-1):0];
@@ -184,11 +181,11 @@ module jtag_axi_data_registers
           next_sr[(USERDATA_WIDTH-1):0] = userdata_ff;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[(USERDATA_WIDTH-1):0] = {tdi,sr_ff[(USERDATA_WIDTH-1):1]};
-          tdo = sr_n_ff[0];
+          next_sr[(USERDATA_WIDTH-1):0] = {tdi, sr_ff[(USERDATA_WIDTH-1):1]};
+          tdo                           = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
-          next_userdata = sr_ff[(USERDATA_WIDTH-1):0];
+          next_userdata    = sr_ff[(USERDATA_WIDTH-1):0];
           next_userdata_up = 1'b1;
         end
         else if (tap_state == EXIT1_DR) begin
@@ -200,8 +197,8 @@ module jtag_axi_data_registers
           next_sr[(`AXI_ADDR_WIDTH-1):0] = axi_info_ff.addr;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[(`AXI_ADDR_WIDTH-1):0] = {tdi,sr_ff[(`AXI_ADDR_WIDTH-1):1]};
-          tdo = sr_n_ff[0];
+          next_sr[(`AXI_ADDR_WIDTH-1):0] = {tdi, sr_ff[(`AXI_ADDR_WIDTH-1):1]};
+          tdo                            = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
           next_axi_info.addr = sr_ff[(`AXI_ADDR_WIDTH-1):0];
@@ -215,8 +212,8 @@ module jtag_axi_data_registers
           next_sr[(`AXI_DATA_WIDTH-1):0] = axi_info_ff.data_wr;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[(`AXI_DATA_WIDTH-1):0] = {tdi,sr_ff[(`AXI_DATA_WIDTH-1):1]};
-          tdo = sr_n_ff[0];
+          next_sr[(`AXI_DATA_WIDTH-1):0] = {tdi, sr_ff[(`AXI_DATA_WIDTH-1):1]};
+          tdo                            = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
           next_axi_info.data_wr = sr_ff[(`AXI_DATA_WIDTH-1):0];
@@ -227,11 +224,11 @@ module jtag_axi_data_registers
       end
       WSTRB_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr[((`AXI_DATA_WIDTH/8)-1):0] = axi_info_ff.wstrb;
+          next_sr = {{32 - (`AXI_DATA_WIDTH / 8) {1'b0}}, axi_info_ff.wstrb};
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[((`AXI_DATA_WIDTH/8)-1):0] = {tdi,sr_ff[((`AXI_DATA_WIDTH/8)-1):1]};
-          tdo = sr_n_ff[0];
+          next_sr = {tdi, sr_ff[31:1]};
+          tdo     = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
           next_axi_info.wstrb = sr_ff[((`AXI_DATA_WIDTH/8)-1):0];
@@ -242,15 +239,15 @@ module jtag_axi_data_registers
       end
       CTRL_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr[($bits(s_axi_jtag_ctrl_t)-1):0] = axi_info_ff.ctrl;
+          next_sr = {{24{0}}, axi_info_ff.ctrl};
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[($bits(s_axi_jtag_ctrl_t)-1):0] = {tdi,sr_ff[($bits(s_axi_jtag_ctrl_t)-1):1]};
-          tdo = sr_n_ff[0];
+          next_sr = {tdi, sr_ff[31:1]};
+          tdo     = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
           next_axi_info.ctrl = s_axi_jtag_ctrl_t'(sr_ff);
-          next_axi_req = next_axi_info.ctrl.start;
+          next_axi_req       = next_axi_info.ctrl.start;
         end
         else if (tap_state == EXIT1_DR) begin
           tdo = sr_n_ff[0];
@@ -258,11 +255,26 @@ module jtag_axi_data_registers
       end
       STATUS_AXI_REG: begin
         if (tap_state == CAPTURE_DR) begin
-          next_sr[($bits(s_axi_jtag_status_t)-1):0] = jtag_status_i;
+          next_sr = jtag_status_i.data_rd;
         end
         else if (tap_state == SHIFT_DR) begin
-          next_sr[($bits(s_axi_jtag_status_t)-1):0] = {tdi,sr_ff[($bits(s_axi_jtag_status_t)-1):1]};
+          next_sr = {tdi, sr_ff[31:1]};
+          tdo     = sr_n_ff[0];
+        end
+        else if (tap_state == UPDATE_DR) begin
+          next_axi_status_rd = 1'b1;
+        end
+        else if (tap_state == EXIT1_DR) begin
           tdo = sr_n_ff[0];
+        end
+      end
+      STATUS_AXI_2_REG: begin
+        if (tap_state == CAPTURE_DR) begin
+          next_sr = {{24{1'b0}}, jtag_status_i.status};
+        end
+        else if (tap_state == SHIFT_DR) begin
+          next_sr = {tdi, sr_ff[31:1]};
+          tdo     = sr_n_ff[0];
         end
         else if (tap_state == UPDATE_DR) begin
           next_axi_status_rd = 1'b1;
@@ -275,7 +287,7 @@ module jtag_axi_data_registers
     /* verilator lint_on CASEINCOMPLETE */
   end
 
-  always_ff @ (posedge tck or negedge trstn) begin
+  always_ff @(posedge tck or negedge trstn) begin
     if (trstn == 1'b0) begin
       bypass_ff           <= 1'b0;
       idcode_ff           <= '0;
@@ -291,15 +303,15 @@ module jtag_axi_data_registers
       axi_req_ff          <= 1'b0;
     end
     else begin
-      bypass_ff           <= next_bypass;
-      idcode_ff           <= next_idcode;
-      sr_ff               <= next_sr;
-      axi_info_ff         <= next_axi_info;
-      ic_rst_ff           <= next_ic_rst;
-      userdata_ff         <= next_userdata;
-      userdata_up_ff      <= next_userdata_up;
-      axi_status_rd_ff    <= next_axi_status_rd;
-      axi_req_ff          <= next_axi_req;
+      bypass_ff        <= next_bypass;
+      idcode_ff        <= next_idcode;
+      sr_ff            <= next_sr;
+      axi_info_ff      <= next_axi_info;
+      ic_rst_ff        <= next_ic_rst;
+      userdata_ff      <= next_userdata;
+      userdata_up_ff   <= next_userdata_up;
+      axi_status_rd_ff <= next_axi_status_rd;
+      axi_req_ff       <= next_axi_req;
     end
   end
 
@@ -308,7 +320,7 @@ module jtag_axi_data_registers
   //    only on the falling edge of either TCK or the optional TRST*.
   // b) The TDO driver shall be set to its inactive drive state except
   //    when the shifting of data is in progress (see 6.1.2).
-  always_ff @ (negedge tck or negedge trstn) begin
+  always_ff @(negedge tck or negedge trstn) begin
     if (trstn == 1'b0) begin
       bypass_n_ff <= 1'b0;
       idcode_n_ff <= '0;
@@ -321,6 +333,6 @@ module jtag_axi_data_registers
     end
   end
 
-  //`ERROR_IF(IC_RST_WIDTH>DR_MAX_WIDTH, "Illegal values for parameters \
+//`ERROR_IF(IC_RST_WIDTH>DR_MAX_WIDTH, "Illegal values for parameters \
                                         //IC_RST_WIDTH and DR_MAX_WIDTH")
 endmodule

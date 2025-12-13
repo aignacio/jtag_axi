@@ -6,8 +6,9 @@
 # Date              : 08.10.2023
 # Last Modified Date: 30.09.2024
 
-import nox
 import os
+
+import nox
 
 TOP_MODULE = "jtag_axi_wrapper"
 SRC_DIR = "rtl"
@@ -24,15 +25,14 @@ def run(session):
     session.env["TIMEUNIT"] = "1ns"
     session.install(
         "pytest",
-        "pytest-sugar", 
+        "pytest-sugar",
         "pytest-xdist",
         "pytest-split",
         "cocotb >= 1.9.0",
         "cocotbext-axi",
-        "pyftdi"
+        "pyftdi",
     )
-    session.run("py.test",
-                "-n", "auto", "-rP", "tests", *session.posargs)
+    session.run("py.test", "-n", "auto", "-rP", "tests", *session.posargs)
 
 
 @nox.session(reuse_venv=True)
@@ -81,14 +81,18 @@ def get_sv():
         session.error("No SystemVerilog files found in the source directory.")
 
     # Construct the slang command with include directory
-    slang_command = [
-        SLANG_CMD,
-        "--include-directory",
-        INCLUDE_DIR,
-        "--top",
-        TOP_MODULE,
-        "-Weverything",
-    # ] + sv_files
-    ] + sv_files + ["--single-unit", "--libraries-inherit-macros"]
+    slang_command = (
+        [
+            SLANG_CMD,
+            "--include-directory",
+            INCLUDE_DIR,
+            "--top",
+            TOP_MODULE,
+            "-Weverything",
+            # ] + sv_files
+        ]
+        + sv_files
+        + ["--single-unit", "--libraries-inherit-macros"]
+    )
 
     return slang_command

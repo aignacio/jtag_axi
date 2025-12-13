@@ -52,22 +52,26 @@ Both `IDCODE` and `BYPASS` as previously mentioned will follow the JTAG standard
 
 The `USERDATA` is a configurable width register that can be used to shift data inside the design where some logic can process through the design output *jtag_axi.userdata_o*. Similar to the `USERCODE`, an output *jtag_axi.userdata_update_o* is available that is asserted when the `USERDATA` register is updated.
 
-|    **Name**    | **Encoding (4 bits)** | **Access (RW/RO)** |        **Bit length**        |                       **Description**                       |
-|:--------------:|:---------------------:|:------------------:|:----------------------------:|:-----------------------------------------------------------:|
-|     EXTEST     |          0000         |         TBD        |              TBD             |                             TBD                             |
-| SAMPLE_PRELOAD |          1010         |         TBD        |    As long as the main SR    |                         No fn - TBD                         |
-|    IC_RESET    |          1100         |         RW         |     IC_RST_WIDTH - Def. 4    | Programmable register to be used to control external resets |
-|     IDCODE     |          1110         |         RO         |              32              |        Returns the IDCODE of the device - 0xBADC0FFE        |
-|     BYPASS     |          1111         |         RW         |               1              |                Standard bypass JTAG register                |
-|  ADDR_AXI_REG  |          0001         |         RW         |   ADDR_AXI_WIDTH - Def. 32   |         Indicates the AXI address of the transaction        |
-| DATA_W_AXI_REG |          0010         |         RW         |   DATA_AXI_WIDTH - Def. 32   |             Indicates the AXI data to be written            |
-|  WSTRB_AXI_REG |          0011         |         RW         |   AXI_DATA_WIDTH/8 - Def. 4  |                    AXI Write strobe mask                    |
-|  CTRL_AXI_REG  |          0100         |         RW*        |               8              |               Controls AXI master I/F dispatch              |
-| STATUS_AXI_REG |          0101         |         RO         | AXI_DATA_WIDTH + 4 - Def. 36 |           Return the status of the AXI transaction          |
-|    USERCODE    |          0111         |         RO         |              32              |                 User input for design values                |
-|    USERDATA    |          0110         |         RW         |    USERDATA_WIDTH - Def. 4   |                  User programmable register                 |
+|     **Name**     | **Encoding (4 bits)** | **Access (RW/RO)** |       **Bit length**       |                       **Description**                       |
+|:----------------:|:---------------------:|:------------------:|:--------------------------:|:-----------------------------------------------------------:|
+|      EXTEST      |          0000         |         TBD        |             TBD            |                             TBD                             |
+|  SAMPLE_PRELOAD  |          1010         |         TBD        |   As long as the main SR   |                         No fn - TBD                         |
+|     IC_RESET     |          1100         |         RW         | Fixed on 32 - See note (1) | Programmable register to be used to control external resets |
+|      IDCODE      |          1110         |         RO         |             32             |        Returns the IDCODE of the device - 0xBADC0FFE        |
+|      BYPASS      |          1111         |         RW         |              1             |                Standard bypass JTAG register                |
+|   ADDR_AXI_REG   |          0001         |         RW         | Fixed on 32 - See note (1) |         Indicates the AXI address of the transaction        |
+|  DATA_W_AXI_REG  |          0010         |         RW         | Fixed on 32 - See note (1) |             Indicates the AXI data to be written            |
+|   WSTRB_AXI_REG  |          0011         |         RW         | Fixed on 32 - See note (1) |                    AXI Write strobe mask                    |
+|   CTRL_AXI_REG   |          0100         |         RW*        | Fixed on 32 - See note (1) |               Controls AXI master I/F dispatch              |
+|  STATUS_AXI_REG  |          0101         |         RO         | Fixed on 32 - See note (1) |           Return the status of the AXI transaction          |
+| STATUS_AXI_2_REG |          1101         |         RO         | Fixed on 32 - See note (1) |           Return the status of the AXI transaction          |
+|     USERCODE     |          0111         |         RO         |             32             |                 User input for design values                |
+|     USERDATA     |          0110         |         RW         | Fixed on 32 - See note (1) |                  User programmable register                 |
 
-***Note**: CTRL_AXI_REG not all registers are RW, more info below.
+***Notes**:
+
+1. These registers are not 32b on `main` branch because we can have flexible DR length but for BSCANE2 option, these have to be 32b.
+2. CTRL_AXI_REG not all registers are RW, more info below.
 
 ### <a name="axi_drs"></a> Encoding of AXI registers
 
