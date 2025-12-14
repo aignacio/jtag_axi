@@ -54,7 +54,7 @@ module jtag_axi_tap_wrapper
         .debug_io (debug_io)
       );
 
-      assign tdo = (select_dr == 1'b0) ? tdo_ir : tdo_dr;
+      assign int_tdo = tdo_dr;
 
       jtag_axi_data_registers #(
         .IDCODE_VAL    (IDCODE_VAL),

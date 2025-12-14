@@ -44,7 +44,7 @@ module jtag_axi_data_registers
   endfunction
 
   // Needs to be the largest DR...
-  localparam DR_MAX_WIDTH = get_greater_width(IC_RST_WIDTH, USERDATA_WIDTH);
+  localparam DR_MAX_WIDTH = USERDATA_WIDTH; //get_greater_width(IC_RST_WIDTH, USERDATA_WIDTH);
 
   logic bypass_ff, next_bypass;
   logic bypass_n_ff;

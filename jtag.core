@@ -11,6 +11,7 @@ filesets:
       - rtl/bus_arch_sv_pkg/amba_ahb_pkg.sv
       - rtl/include/jtag_axi_pkg.sv
       - rtl/jtag_axi_data_registers.sv
+      - rtl/jtag_axi_bscane2_adapter.sv
       - rtl/jtag_axi_dispatch.sv
       - rtl/jtag_axi_fifo.sv
       - rtl/jtag_axi_if.sv
